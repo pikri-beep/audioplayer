@@ -1,0 +1,16 @@
+node_modules/
+
+songs/*.mp3
+songs/*.wav
+songs/*.ogg
+songs/*.m4a
+
+covers/custom-cover.jpg
+
+dist/
+out/
+
+*.log
+
+.DS_Store
+Thumbs.db

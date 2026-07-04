@@ -1,0 +1,20 @@
+{
+  "name": "audioplayer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "*"
+  },
+  "dependencies": {
+    "music-metadata": "^11.13.0",
+    "node-vibrant": "^4.0.4"
+  }
+}
