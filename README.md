@@ -1,4 +1,4 @@
-# 🎵 NJOY Music
+# 🎵 Music player
 
 Modern Desktop Music Player built with Electron.
 

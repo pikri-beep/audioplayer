@@ -245,6 +245,8 @@ body {
     list-style: none;
     overflow-y: auto;
     margin-top: 10px;
+    flex: 1; /* Biar list lagunya ngalah dan ngisi sisa ruang aja */
+    min-height: 0; /* Mencegah list lagunya bablas keluar dari batas popup */
 }
 
 #playlist-ul li {
@@ -295,6 +297,79 @@ body {
 /* Efek sedikit redup pada album saat di-hover biar tombolnya menonjol */
 .album-art-wrapper:hover .album-art {
     filter: brightness(0.7);
+}
+
+.header-btn{
+    background:none;
+    border:none;
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.header-btn:hover{
+    color:var(--theme-glow);
+}
+#settings-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: .3s;
+    margin-bottom: 0;
+    flex-shrink: 0; /* Biar panelnya pantang digencet */
+}
+
+#settings-panel.show{
+    max-height:500px;
+    margin-bottom:15px;
+}
+
+.setting-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:10px 0;
+    color:white;
+    font-size:14px;
+}
+
+.switch{
+    position:relative;
+    width:42px;
+    height:22px;
+}
+
+.switch input{
+    display:none;
+}
+
+.slider{
+    position:absolute;
+    inset:0;
+    background:#555;
+    border-radius:50px;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.slider::before{
+    content:"";
+    position:absolute;
+    width:18px;
+    height:18px;
+    left:2px;
+    top:2px;
+    border-radius:50%;
+    background:white;
+    transition:.25s;
+}
+
+.switch input:checked + .slider{
+    background:#32d74b;
+}
+
+.switch input:checked + .slider::before{
+    transform:translateX(20px);
 }
 
 /* Mengatur layout saat lebar jendela dikecilkan */

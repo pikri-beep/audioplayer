@@ -61,7 +61,12 @@
         <div class="popup-content">
             <div class="popup-header">
                 <h3>Daftar Lagu</h3>
-                <button id="close-popup-btn" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button id="settings-btn" class="header-btn">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <button id="close-popup-btn" class="header-btn">&times;</button>
+                </div>
             </div>
             
             <div class="playlist-mode-toggle" style="display: flex; gap: 10px; margin-bottom: 12px;">
@@ -72,7 +77,29 @@
             <div class="search-wrapper" style="margin-bottom: 15px;">
                 <input type="text" id="search-bar" placeholder="Cari lagu...">
             </div>
-
+            <div id="settings-panel">      
+                <div class="setting-row">
+                    <span>System Tray</span>
+                    <label class="switch">
+                        <input type="checkbox" id="tray-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Now Playing</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notification-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span>Always On Top</span>
+                    <label class="switch">
+                        <input type="checkbox" id="ontop-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
             <ul id="playlist-ul"></ul>
         </div>
     </div>

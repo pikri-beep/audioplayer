@@ -140,35 +140,38 @@ function togglePlay() {
 function changeSongWithFade(newIndex) {
     if (playlist.length === 0) return;
     
+    // Ambil volume target saat ini (bisa saja user baru mengubah slider)
+    if (volumeSlider) {
+        targetVolume = volumeSlider.value / 100;
+    }
+    
     let currentVol = audio.volume;
     
     // Proses Fade Out
     let fadeOutInterval = setInterval(() => {
         if (currentVol > 0.05) {
-            currentVol -= 0.05; // Turunkan volume perlahan
-            audio.volume = currentVol;
+            currentVol -= 0.05; 
+            audio.volume = Math.max(0, currentVol);
         } else {
-            // Kalau volume udah habis, stop interval & ganti lagu
             clearInterval(fadeOutInterval);
             audio.pause();
             
             loadSong(newIndex);
-            audio.volume = 0; // Mulai lagu baru dari volume 0
-            audio.play();
+            audio.volume = 0; 
+            audio.play().catch(err => console.log("Play interrupted:", err));
             playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
             
             // Proses Fade In
             let fadeInInterval = setInterval(() => {
                 if (audio.volume < targetVolume - 0.05) {
-                    audio.volume += 0.05; // Naikkan volume perlahan
+                    audio.volume += 0.05; 
                 } else {
-                    // Kalau udah mencapai target, paskan volumenya & stop interval
-                    audio.volume = targetVolume;
+                    audio.volume = targetVolume; // Kunci ke target volume asli
                     clearInterval(fadeInInterval);
                 }
-            }, 40); // Kecepatan transisi Fade In (ms)
+            }, 40); 
         }
-    }, 30); // Kecepatan transisi Fade Out (ms)
+    }, 30); 
 }
 
 // Update fungsi Next Song
@@ -221,6 +224,11 @@ async function extractMetadata(filePath) {
 
             if (metadata.title) songTitleEl.innerText = metadata.title;
             if (metadata.artist) songArtistEl.innerText = metadata.artist;
+            ipcRenderer.send("show-notification", {
+                title: metadata.title || songTitleEl.innerText,
+                artist: metadata.artist || songArtistEl.innerText,
+                cover: metadata.coverPath || "covers/default.png" 
+            });
         }
     } catch (error) {
         albumArtImg.src = "covers/default.png";
@@ -254,14 +262,12 @@ progressBar.addEventListener('input', () => {
 let targetVolume = 0.7; // Default 70%
 const volumeSlider = document.getElementById('volume-slider');
 
-if(volumeSlider) {
-    targetVolume = volumeSlider.value / 100;
-    audio.volume = targetVolume;
-    
+if (volumeSlider) {
     volumeSlider.addEventListener('input', () => {
         targetVolume = volumeSlider.value / 100;
         audio.volume = targetVolume;
-        document.getElementById('volume-text').innerText = `${volumeSlider.value}%`;
+        const volumeText = document.getElementById('volume-text');
+        if (volumeText) volumeText.innerText = `${volumeSlider.value}%`;
     });
 }
 
@@ -349,6 +355,62 @@ ipcRenderer.on("thumb-next", () => {
 ipcRenderer.on("thumb-prev", () => {
     prevSong();
 });
+
+const SETTINGS_KEY = "njoy-settings";
+
+let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
+    tray: true,
+    notification: true,
+    alwaysOnTop: false
+};
+
+function saveSettings() {
+    localStorage.setItem(
+        SETTINGS_KEY,
+        JSON.stringify(settings)
+    );
+}
+
+const settingsBtn = document.getElementById("settings-btn");
+const settingsPanel = document.getElementById("settings-panel");
+
+const trayToggle = document.getElementById("tray-toggle");
+const notificationToggle = document.getElementById("notification-toggle");
+const alwaysOnTopToggle = document.getElementById("ontop-toggle");
+
+settingsBtn.addEventListener("click", () => {
+    settingsPanel.classList.toggle("show");
+});
+
+// isi toggle sesuai setting
+trayToggle.checked = settings.tray;
+notificationToggle.checked = settings.notification;
+alwaysOnTopToggle.checked = settings.alwaysOnTop;
+
+trayToggle.addEventListener("change", () => {
+    settings.tray = trayToggle.checked;
+    saveSettings();
+    // AKTIFKAN INI: Kirim status tray ke main process
+    ipcRenderer.send("toggle-tray", settings.tray);
+});
+
+notificationToggle.addEventListener("change", () => {
+    settings.notification = notificationToggle.checked;
+    saveSettings();
+    // AKTIFKAN INI: Kirim status notifikasi ke main process
+    ipcRenderer.send("toggle-notification", settings.notification);
+});
+
+alwaysOnTopToggle.addEventListener("change", () => {
+    settings.alwaysOnTop = alwaysOnTopToggle.checked;
+    saveSettings();
+    // AKTIFKAN & TAMBAHKAN INI: Kirim status always on top ke main process
+    ipcRenderer.send("toggle-ontop", settings.alwaysOnTop);
+});
+
+ipcRenderer.send("toggle-ontop", settings.alwaysOnTop);
+ipcRenderer.send("toggle-notification", settings.notification);
+ipcRenderer.send("toggle-tray", settings.tray);
 
 loadPlaylist();
 

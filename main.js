@@ -5,7 +5,8 @@ const {
   dialog,
   Tray,
   Menu,
-  nativeImage
+  nativeImage,
+  screen
 } = require('electron');
 
 const path = require('path');
@@ -14,6 +15,8 @@ const fs = require('fs');
 let win;
 let tray;
 let isQuiting = false;
+let notificationWin = null;
+let notificationEnabled = true;
 
 function updateThumbar(isPlaying) {
 
@@ -88,9 +91,70 @@ win.on("close", (e) => {
 });
 }
 
+function createNotificationWindow() {
+
+    notificationWin = new BrowserWindow({
+
+        width: 320,
+        height: 90,
+        frame: false,
+        transparent: true,
+        resizable: false,
+        movable: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        show: false,
+        focusable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    notificationWin.loadFile(
+        path.join(__dirname, "notification", "notification.html")
+    );
+
+    const area = screen.getPrimaryDisplay().workAreaSize;
+
+    notificationWin.setPosition(
+        area.width - 335,
+        area.height - 105
+    );
+
+}
+
+function showLiveCard(song) {
+
+    if (!notificationEnabled) return;
+
+    if (!notificationWin) {
+
+        createNotificationWindow();
+
+    }
+
+    notificationWin.show();
+
+    notificationWin.webContents.send(
+        "song-data",
+        song
+    );
+
+    clearTimeout(notificationWin.hideTimer);
+
+    notificationWin.hideTimer = setTimeout(() => {
+
+        notificationWin.hide();
+
+    }, 4000);
+
+}
+
 app.whenReady().then(() => {
 
     createWindow();
+    createNotificationWindow();
     updateThumbar(false);
 
     // Pakai icon default Electron dulu
@@ -197,4 +261,101 @@ ipcMain.handle('upload-custom-cover', async () => {
 
 ipcMain.on("player-state", (_, playing) => {
     updateThumbar(playing);
+});
+
+ipcMain.on("show-notification", (_, song) => {
+
+    showLiveCard(song);
+
+});
+
+ipcMain.on("live-prev", () => {
+
+    win.webContents.send("thumb-prev");
+
+});
+
+ipcMain.on("live-play", () => {
+
+    win.webContents.send("thumb-play");
+
+});
+
+ipcMain.on("live-next", () => {
+
+    win.webContents.send("thumb-next");
+
+});
+
+ipcMain.on("toggle-notification", (_, enabled) => {
+
+    notificationEnabled = enabled;
+
+});
+
+ipcMain.on("toggle-tray", (_, enabled) => {
+
+    if (enabled) {
+
+        if (!tray) {
+
+            const icon = nativeImage.createFromPath(
+                path.join(__dirname, "assets", "logo.png")
+            );
+
+            tray = new Tray(icon);
+
+            tray.setToolTip("NJOY Music");
+
+            tray.setContextMenu(
+                Menu.buildFromTemplate([
+                    {
+                        label: "🎵 Buka Player",
+                        click() {
+                            win.show();
+                        }
+                    },
+                    {
+                        type: "separator"
+                    },
+                    {
+                        label: "❌ Keluar",
+                        click() {
+                            isQuiting = true;
+                            app.quit();
+                        }
+                    }
+                ])
+            );
+
+            tray.on("click", () => {
+
+                if (win.isVisible())
+                    win.hide();
+                else
+                    win.show();
+
+            });
+
+        }
+
+    } else {
+
+        if (tray) {
+
+            tray.destroy();
+
+            tray = null;
+
+        }
+
+    }
+
+});
+
+// Tambahkan listener ini di bagian bawah main.js bersama ipcMain lainnya
+ipcMain.on("toggle-ontop", (_, enabled) => {
+    if (win) {
+        win.setAlwaysOnTop(enabled);
+    }
 });

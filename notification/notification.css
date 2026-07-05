@@ -1,0 +1,107 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: transparent;
+    overflow: hidden;
+    font-family: "Segoe UI";
+}
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    width: 300px;
+    height: 86px;
+    padding: 12px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+
+    background: rgba(30, 30, 30, 0.45);
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+    transform: translateX(120%);
+    opacity: 0;
+
+    transition:
+        transform 0.35s cubic-bezier(.22, 1, .36, 1),
+        opacity 0.35s;
+}
+
+#cover {
+    width: 60px;
+    height: 60px;
+
+    flex-shrink: 0;
+
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.content {
+    flex: 1;
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#title {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+#artist {
+    margin-top: 2px;
+
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.now-playing {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 6px;
+
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: #58ff8d;
+    box-shadow: 0 0 8px #58ff8d;
+}
