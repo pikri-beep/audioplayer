@@ -437,6 +437,28 @@ ipcRenderer.send("toggle-ontop", settings.alwaysOnTop);
 ipcRenderer.send("toggle-notification", settings.notification);
 ipcRenderer.send("toggle-tray", settings.tray);
 
+// ==========================================
+// FITUR CUSTOM THEME
+// ==========================================
+const themeSelector = document.getElementById('theme-selector');
+// Cek apakah ada tema yang tersimpan sebelumnya, kalau tidak pakai 'default'
+const savedTheme = localStorage.getItem('njoy_theme') || 'default';
+
+// Terapkan tema saat aplikasi pertama kali dibuka
+document.body.setAttribute('data-theme', savedTheme);
+if (themeSelector) themeSelector.value = savedTheme;
+
+// Dengarkan jika user mengganti pilihan tema di dropdown
+if (themeSelector) {
+    themeSelector.addEventListener('change', (e) => {
+        const selectedTheme = e.target.value;
+        // Ganti tema di layar
+        document.body.setAttribute('data-theme', selectedTheme);
+        // Simpan ke memori lokal
+        localStorage.setItem('njoy_theme', selectedTheme);
+    });
+}
+
 loadPlaylist();
 
 
