@@ -6,6 +6,7 @@ songs/*.ogg
 songs/*.m4a
 
 covers/custom-cover.jpg
+covers/default.png
 
 dist/
 out/
