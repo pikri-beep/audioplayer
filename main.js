@@ -6,7 +6,8 @@ const {
   Tray,
   Menu,
   nativeImage,
-  screen
+  screen,
+  globalShortcut
 } = require('electron');
 
 const path = require('path');
@@ -15,6 +16,7 @@ const fs = require('fs');
 let win;
 let tray;
 let isQuiting = false;
+let isTrayEnabled = true;
 let notificationWin = null;
 let notificationEnabled = true;
 
@@ -81,12 +83,27 @@ function createWindow () {
   });
 
   win.loadFile('index.html');
+// 1. Kasih tau Electron kalau kita emang beneran niat mau quit
+app.on('before-quit', () => {
+    isQuiting = true;
+});
 
-  // Kalau pencet X, jangan keluar, tapi sembunyikan ke tray
-win.on("close", (e) => {
-    if (!isQuiting) {
-        e.preventDefault();
-        win.hide();
+// 2. Logika nutup window
+win.on('close', (event) => {
+    // Kalau settingan Tray NYALA dan user gak ngeklik "Keluar" dari tray menu
+    if (!isQuiting && isTrayEnabled) {
+        event.preventDefault(); // Cegah window hancur
+        win.hide();             // Sembunyiin aja
+    }
+    // Kalau Tray MATI, kita gak ngapa-ngapain di sini. 
+    // Biarkan Electron menghancurkan window-nya secara alami.
+});
+
+// 3. Pas window-nya beneran hancur (karena tray mati), suruh app beneran berhenti (lagu mati)
+app.on('window-all-closed', () => {
+    // Kalau di Windows/Linux, semua window ketutup = matiin aplikasi
+    if (process.platform !== 'darwin') {
+        app.quit();
     }
 });
 }
@@ -160,7 +177,15 @@ app.whenReady().then(() => {
     // Pakai icon default Electron dulu
     const icon = nativeImage.createFromPath(
     path.join(__dirname, "assets", "logo.png")
-);
+    );
+
+    globalShortcut.register('CommandOrControl+Space', () => {
+    win.webContents.send("thumb-play");});
+    globalShortcut.register('CommandOrControl+Right', () => {
+    win.webContents.send("thumb-next");});
+    globalShortcut.register('CommandOrControl+Left', () => {
+    win.webContents.send("thumb-prev");});
+
 
 tray = new Tray(icon);
 
@@ -195,14 +220,6 @@ tray = new Tray(icon);
         }
     });
 
-});
-
-app.on("before-quit", () => {
-    isQuiting = true;
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
 });
 
 // Listener untuk buka folder ambil file musik
@@ -294,19 +311,15 @@ ipcMain.on("toggle-notification", (_, enabled) => {
 });
 
 ipcMain.on("toggle-tray", (_, enabled) => {
+    isTrayEnabled = enabled;
 
     if (enabled) {
-
         if (!tray) {
-
             const icon = nativeImage.createFromPath(
                 path.join(__dirname, "assets", "logo.png")
             );
-
             tray = new Tray(icon);
-
             tray.setToolTip("NJOY Music");
-
             tray.setContextMenu(
                 Menu.buildFromTemplate([
                     {
@@ -327,30 +340,19 @@ ipcMain.on("toggle-tray", (_, enabled) => {
                     }
                 ])
             );
-
             tray.on("click", () => {
-
                 if (win.isVisible())
                     win.hide();
                 else
                     win.show();
-
             });
-
         }
-
     } else {
-
         if (tray) {
-
             tray.destroy();
-
             tray = null;
-
         }
-
     }
-
 });
 
 // Tambahkan listener ini di bagian bawah main.js bersama ipcMain lainnya

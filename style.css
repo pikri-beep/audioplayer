@@ -23,15 +23,17 @@ body {
 .player-container {
     background: #1e1e1e;
     padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     width: 90vw;
     max-width: 380px;
+    border: 1px solid var(--theme-border);
+    border-radius: 20px;
+    box-shadow: 0 0 10px var(--theme-border); 
+    transition: all 0.5s ease-in-out;
 }
 
 .album-art {
     width: 100%;
-    max-width: 200px;
+    max-width: 280px;
     aspect-ratio: 1 / 1; /* Biar tetap kotak otomatis */
     height: auto;
     background: #282828;
@@ -42,6 +44,15 @@ body {
     align-items: center;
     border: 2px solid var(--theme-border);
     box-shadow: 0 0 20px var(--theme-border);
+}
+
+#album-art-img {
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    border-radius: 15px;
+    box-shadow: 0 0 25px var(--theme-glow);
+    transition: box-shadow 0.5s ease-in-out;
 }
 
 .song-info {
@@ -289,6 +300,13 @@ body {
     transition: opacity 0.3s ease;
 }
 
+.album-art-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 25px auto;
+}
+
 /* Munculkan tombol saat di-hover */
 .album-art-wrapper:hover .camera-btn {
     opacity: 1;
@@ -406,6 +424,7 @@ body {
         max-width: 150px;
         margin-bottom: 15px;
     }
+
     .song-info {
         margin-bottom: 10px;
     }

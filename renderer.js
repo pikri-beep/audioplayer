@@ -14,6 +14,7 @@ const durationEl = document.getElementById('duration');
 const songTitleEl = document.getElementById('song-title');
 const songArtistEl = document.getElementById('song-artist');
 const playlistUl = document.getElementById('playlist-ul');
+const { Vibrant } = require('node-vibrant/node');
 
 
 const songsFolder = path.join(__dirname, 'songs');
@@ -215,22 +216,46 @@ async function extractMetadata(filePath) {
         const metadata = await ipcRenderer.invoke('get-metadata', filePath);
         
         if (metadata) {
-            // Jika ada path, gunakan path tersebut. Tambahkan timestamp agar tidak cache
-            if (metadata.coverPath) {
-                albumArtImg.src = `file://${metadata.coverPath}?t=${new Date().getTime()}`;
-            } else {
-                albumArtImg.src = "covers/default.png";
-            }
-
+            // 1. Atur teks judul, artis, dan notifikasi terlebih dahulu
             if (metadata.title) songTitleEl.innerText = metadata.title;
             if (metadata.artist) songArtistEl.innerText = metadata.artist;
+            
             ipcRenderer.send("show-notification", {
                 title: metadata.title || songTitleEl.innerText,
                 artist: metadata.artist || songArtistEl.innerText,
                 cover: metadata.coverPath || "covers/default.png" 
             });
+
+            // 2. Atur gambar cover dan ekstrak warna dinamis
+            if (metadata.coverPath) {
+                // Update gambar di layar
+                albumArtImg.src = `file://${metadata.coverPath}?t=${new Date().getTime()}`;
+                
+                // LANGSUNG tembak lokasi path file-nya, jangan pakai elemen 'albumArtImg'
+                // Pakai .then() menyesuaikan versi node-vibrant 4+
+                Vibrant.from(metadata.coverPath).getPalette()
+                    .then((palette) => {
+                        if (palette && palette.Vibrant) {
+                            const rgb = palette.Vibrant.rgb;
+                            const rgbString = `${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])}`;
+                            
+                            document.documentElement.style.setProperty('--theme-glow', `rgb(${rgbString})`);
+                            document.documentElement.style.setProperty('--theme-border', `rgba(${rgbString}, 0.3)`);
+                        }
+                    })
+                    .catch((vibrantError) => {
+                        console.log("Vibrant gagal ekstrak warna (tapi aplikasi tetap jalan):", vibrantError);
+                    });
+
+            } else {
+                // Kalau lagu nggak ada cover, kembalikan gambar & warna ke default
+                albumArtImg.src = "covers/default.png";
+                document.documentElement.style.setProperty('--theme-glow', '#a855f7');
+                document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
+            }
         }
     } catch (error) {
+        console.error("Gagal ambil metadata:", error);
         albumArtImg.src = "covers/default.png";
     }
 }
