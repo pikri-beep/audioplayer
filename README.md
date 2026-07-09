@@ -39,4 +39,41 @@ Pastikan kamu sudah menginstal **[Node.js](https://nodejs.org/)** dan **Git** di
 **1. Clone Repository**
 Buka terminal/CMD, lalu jalankan perintah ini untuk mengunduh kode sumber:
 ```bash
-git clone [https://github.com/USERNAME/](https://github.com/USERNAME/)[NAMA-REPO-KAMU].git
+git clone https://github.com/pikri-beep/audioplayer.git
+```
+
+**2. Masuk ke Folder Proyek**
+```bash
+cd [NAMA-REPO-KAMU]
+```
+
+**3. Install Dependencies**
+Unduh semua modul yang dibutuhkan oleh Electron:
+
+```bash
+npm install
+```
+**4. Jalankan Aplikasi**
+Mulai aplikasi NJOY Music Player:
+
+```bash
+npm start
+```
+
+# ⚙️ Cara Menggunakan Aplikasi
+1. Memasukkan Lagu: Aplikasi akan otomatis membaca lagu-lagu .mp3 yang ada di dalam folder songs (jika folder belum ada, aplikasi akan membuatnya otomatis saat pertama kali dijalankan). Kamu juga bisa menggunakan tombol Open File di aplikasi untuk memilih lagu dari folder lain.
+
+2. Mengganti Tema: Klik ikon Gear (Settings) di pojok kanan atas, lalu pilih tema dari menu dropdown. Seluruh UI (termasuk modal pop-up dan scrollbar) akan langsung beradaptasi dengan tema yang dipilih!
+
+3. Mute Cepat: Klik langsung pada ikon speaker di sebelah slider volume untuk mematikan/menyalakan suara seketika.
+
+🛠️ Teknologi yang Digunakan
+1.Electron.js - Desktop App Framework
+2.Vanilla JS (ES6) - Logika & IPC Communication
+3.CSS3 - Custom Theming & Animations
+4.HTML5 - Audio API & Struktur UI
+5.Font Awesome - Ikon Vektor
+6.Google Fonts - Custom Fonts (Press Start 2P, Bangers, Chewy)
+
+
+***
