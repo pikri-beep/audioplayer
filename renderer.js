@@ -284,17 +284,67 @@ progressBar.addEventListener('input', () => {
 });
 
 // Fitur Volume Slider & Memori Target Volume
-let targetVolume = 0.7; // Default 70%
-const volumeSlider = document.getElementById('volume-slider');
+// ==========================================
+// FITUR VOLUME & MUTE
+// ==========================================
+let targetVolume = 0.7; 
+let lastVolume = 0.7; // Menyimpan volume terakhir sebelum di-mute
+let isMuted = false;
 
+const volumeSlider = document.getElementById('volume-slider');
+const volumeText = document.getElementById('volume-text');
+const volumeIcon = document.getElementById('volume-icon');
+
+// Fungsi untuk ganti ikon volume sesuai persentase
+function updateVolumeIcon(vol) {
+    if (!volumeIcon) return;
+    if (vol === 0 || isMuted) {
+        volumeIcon.className = 'fa-solid fa-volume-xmark'; // Ikon Silang
+    } else if (vol < 0.5) {
+        volumeIcon.className = 'fa-solid fa-volume-low'; // Ikon Suara Kecil
+    } else {
+        volumeIcon.className = 'fa-solid fa-volume-high'; // Ikon Suara Keras
+    }
+}
+
+// Fungsi utama untuk Mute / Unmute
+function toggleMute() {
+    if (isMuted) {
+        // UNMUTE: Kembalikan ke volume sebelumnya
+        isMuted = false;
+        audio.volume = lastVolume > 0 ? lastVolume : 0.7; // Jaga-jaga kalau last volumenya 0
+        if (volumeSlider) volumeSlider.value = audio.volume * 100;
+    } else {
+        // MUTE: Simpan volume saat ini, lalu nol-kan
+        lastVolume = audio.volume;
+        isMuted = true;
+        audio.volume = 0;
+        if (volumeSlider) volumeSlider.value = 0;
+    }
+    
+    if (volumeText) volumeText.innerText = `${Math.round(audio.volume * 100)}%`;
+    updateVolumeIcon(audio.volume);
+}
+
+// Pasang klik di ikon volume
+if (volumeIcon) {
+    volumeIcon.addEventListener('click', toggleMute);
+}
+
+// Pasang sistem saat slider digeser
 if (volumeSlider) {
     volumeSlider.addEventListener('input', () => {
         targetVolume = volumeSlider.value / 100;
         audio.volume = targetVolume;
-        const volumeText = document.getElementById('volume-text');
+        isMuted = targetVolume === 0; // Kalau ditarik sampai 0, otomatis dianggap mute
+        
         if (volumeText) volumeText.innerText = `${volumeSlider.value}%`;
+        updateVolumeIcon(targetVolume);
     });
 }
+
+// Tangkap sinyal shortcut Mute dari keyboard
+ipcRenderer.on('shortcut-mute', toggleMute);
 
 // Tombol Tambah Lagu (+)
 document.getElementById('add-song-btn').addEventListener('click', async () => {
@@ -456,6 +506,20 @@ if (themeSelector) {
         document.body.setAttribute('data-theme', selectedTheme);
         // Simpan ke memori lokal
         localStorage.setItem('njoy_theme', selectedTheme);
+    });
+}
+
+const searchBar = document.getElementById('search-bar');
+if (searchBar && playlistUl) {
+    searchBar.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const songItems = playlistUl.getElementsByTagName('li');
+        
+        Array.from(songItems).forEach(item => {
+            const songName = item.textContent.toLowerCase();
+            // Langsung saring lagu detik itu juga!
+            item.style.display = songName.includes(searchTerm) ? 'block' : 'none'; 
+        });
     });
 }
 

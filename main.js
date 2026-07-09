@@ -185,6 +185,7 @@ app.whenReady().then(() => {
     win.webContents.send("thumb-next");});
     globalShortcut.register('CommandOrControl+Left', () => {
     win.webContents.send("thumb-prev");});
+    globalShortcut.register('CommandOrControl+M', () => { if (win) win.webContents.send('shortcut-mute'); });
 
 
 tray = new Tray(icon);
