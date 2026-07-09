@@ -67,13 +67,13 @@ npm start
 
 3. Mute Cepat: Klik langsung pada ikon speaker di sebelah slider volume untuk mematikan/menyalakan suara seketika.
 
-🛠️ Teknologi yang Digunakan
-1.Electron.js - Desktop App Framework
-2.Vanilla JS (ES6) - Logika & IPC Communication
-3.CSS3 - Custom Theming & Animations
-4.HTML5 - Audio API & Struktur UI
-5.Font Awesome - Ikon Vektor
-6.Google Fonts - Custom Fonts (Press Start 2P, Bangers, Chewy)
+# 🛠️ Teknologi yang Digunakan
+1. Electron.js - Desktop App Framework
+2. Vanilla JS (ES6) - Logika & IPC Communication
+3. CSS3 - Custom Theming & Animations
+4. HTML5 - Audio API & Struktur UI
+5. Font Awesome - Ikon Vektor
+6. Google Fonts - Custom Fonts (Press Start 2P, Bangers, Chewy)
 
 
 ***
