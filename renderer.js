@@ -368,14 +368,15 @@ document.getElementById('btn-mode-njoy').addEventListener('click', () => {
     renderPlaylist();
 });
 
+// FIX LOGIKA WARNA TOMBOL SHUFFLE DAN REPEAT (Hanya Toggle Class)
 shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
-    shuffleBtn.style.color = isShuffle ? 'var(--theme-glow)' : '#aaa';
+    shuffleBtn.classList.toggle('active', isShuffle);
 });
 
 repeatBtn.addEventListener('click', () => {
     isRepeat = !isRepeat;
-    repeatBtn.style.color = isRepeat ? 'var(--theme-glow)' : '#aaa';
+    repeatBtn.classList.toggle('active', isRepeat);
 });
 
 // Custom cover
@@ -478,7 +479,5 @@ if (searchBar && playlistUl) {
         });
     });
 }
-
-
 
 loadPlaylist();

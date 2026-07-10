@@ -37,7 +37,7 @@ body {
 .album-art {
     width: 100%;
     max-width: 280px;
-    aspect-ratio: 1 / 1; /* Biar tetap kotak otomatis */
+    aspect-ratio: 1 / 1; 
     height: auto;
     background: #282828;
     margin: 0 auto 25px auto;
@@ -47,8 +47,6 @@ body {
     align-items: center;
     border: 2px solid var(--theme-border);
     box-shadow: 0 0 20px var(--theme-border);
-    
-
 }
 
 #album-art-img {
@@ -59,7 +57,6 @@ body {
     box-shadow: 0 0 25px var(--theme-glow);
     transition: box-shadow 0.5s ease-in-out;
 }
-
 
 .song-info {
     text-align: center;
@@ -101,12 +98,10 @@ body {
 .extra-controls {
     display: flex;
     justify-content: center;
-    gap: 40px; /* Atur jarak antar tombol ekstra */
+    gap: 40px; 
     align-items: center;
     margin-bottom: 25px;
 }
-
-
 
 .sub-control-btn {
     background: none;
@@ -121,6 +116,21 @@ body {
     color: #fff;
 }
 
+/* KETIKA SHUFFLE & REPEAT AKTIF (Sistem Baru) */
+.sub-control-btn.active {
+    color: var(--theme-glow);
+    text-shadow: 0 0 10px var(--theme-glow);
+}
+
+/* KETIKA VOLUME ICON DIKLIK/DITAHAN */
+#volume-icon {
+    transition: 0.2s;
+}
+#volume-icon:active {
+    color: var(--theme-glow);
+    transform: scale(0.9);
+}
+
 .volume-container {
     position: relative;
     display: flex;
@@ -130,7 +140,7 @@ body {
 
 .volume-pop-container {
     position: absolute;
-    bottom: 130%; /* Agak diturunin dikit biar gampang dijangkau */
+    bottom: 130%; 
     left: 50%;
     transform: translateX(-50%);
     background: #282828;
@@ -140,17 +150,16 @@ body {
     align-items: center;
     gap: 10px;
     opacity: 0;
-    visibility: hidden; /* Pakai visibility biar lebih mantap dari pointer-events */
+    visibility: hidden; 
     transition: 0.3s ease;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     border: 1px solid var(--theme-border);
 }
 
-/* JEMBATAN GAIB: Menutupi celah antara ikon dan pop-up biar mouse nggak jatuh */
 .volume-pop-container::after {
     content: '';
     position: absolute;
-    bottom: -25px; /* Menjulur ke bawah */
+    bottom: -25px; 
     left: 0;
     width: 100%;
     height: 25px;
@@ -174,7 +183,7 @@ body {
 
 .controls {
     display: flex;
-    justify-content: space-between; /* Membuat tombol menu & add minggir ke tepi */
+    justify-content: space-between; 
     align-items: center;
     padding: 0 10px;
 }
@@ -274,8 +283,8 @@ body {
     list-style: none;
     overflow-y: auto;
     margin-top: 10px;
-    flex: 1; /* Biar list lagunya ngalah dan ngisi sisa ruang aja */
-    min-height: 0; /* Mencegah list lagunya bablas keluar dari batas popup */
+    flex: 1; 
+    min-height: 0; 
     max-height: 220px;
     padding-right: 5px;
 }
@@ -304,7 +313,6 @@ body {
     color: #ef4444;
 }
 
-/* Styling tombol kamera */
 .camera-btn {
     position: absolute;
     top: 50%;
@@ -316,7 +324,7 @@ body {
     padding: 15px;
     border-radius: 50%;
     cursor: pointer;
-    opacity: 0; /* Awalnya transparan/sembunyi */
+    opacity: 0; 
     transition: opacity 0.3s ease;
 }
 
@@ -327,12 +335,10 @@ body {
     margin: 0 auto 25px auto;
 }
 
-/* Munculkan tombol saat di-hover */
 .album-art-wrapper:hover .camera-btn {
     opacity: 1;
 }
 
-/* Efek sedikit redup pada album saat di-hover biar tombolnya menonjol */
 .album-art-wrapper:hover .album-art {
     filter: brightness(0.7);
 }
@@ -349,12 +355,19 @@ body {
 .header-btn:hover{
     color:var(--theme-glow);
 }
+
+/* KETIKA TOMBOL HEADER DIKLIK/DITAHAN */
+.header-btn:active {
+    color: var(--theme-glow);
+    transform: scale(0.9);
+}
+
 #settings-panel {
     max-height: 0;
     overflow: hidden;
     transition: .3s;
     margin-bottom: 0;
-    flex-shrink: 0; /* Biar panelnya pantang digencet */
+    flex-shrink: 0; 
 }
 
 #settings-panel.show{
@@ -410,10 +423,6 @@ body {
     transform:translateX(20px);
 }
 
-/* =========================================
-   IMPORT FONTS & DASAR PLAYLIST
-   ========================================= */
-
 /* Dasar Songlist Biar Rapi */
 #playlist-ul {
     list-style: none;
@@ -433,7 +442,6 @@ body {
     display: flex;
     align-items: center;
 }
-/* Dasar Scrollbar */
 #playlist-ul::-webkit-scrollbar { width: 8px; }
 #playlist-ul::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 10px; }
 #playlist-ul::-webkit-scrollbar-thumb { background: #555; border-radius: 10px; }
@@ -456,7 +464,7 @@ body {
 [data-theme="marvel"] #song-title, 
 [data-theme="marvel"] .btn-secondary i,
 [data-theme="marvel"] .progress-container span {
-    color: #d4af37; /* Emas khas Marvel */
+    color: #d4af37; 
     text-shadow: 0 0 5px rgba(212, 175, 55, 0.4);
 }
 
@@ -468,7 +476,6 @@ body {
     background: #d4af37;
 }
 
-/* KUSTOMISASI TOMBOL MARVEL */
 [data-theme="marvel"] .btn-main {
     background: #4a0000;
     border: 2px solid #d4af37;
@@ -477,9 +484,17 @@ body {
 }
 [data-theme="marvel"] .btn-main:hover {
     background: #d4af37;
-    color: #4a0000; /* Ikon berubah gelap pas di-hover */
+    color: #4a0000; 
     box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
     transform: scale(1.05);
+}
+
+/* WARNA AKTIF/KLIK TEMA MARVEL */
+[data-theme="marvel"] .sub-control-btn.active,
+[data-theme="marvel"] #volume-icon:active,
+[data-theme="marvel"] .header-btn:active {
+    color: #d4af37 !important;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
 }
 
 [data-theme="marvel"] #volume-slider {
@@ -497,7 +512,7 @@ body {
     -webkit-appearance: none !important; appearance: none !important;
     height: 16px; width: 16px; background: #d4af37;
     border: 2px solid #ffffff; border-radius: 50% !important;
-    margin-top: -6px; /* Posisi ke tengah jalur */
+    margin-top: -6px; 
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.8); cursor: pointer;
 }
 
@@ -531,14 +546,12 @@ body {
     background: #2a0000 !important; color: #d4af37 !important; border: 1px solid #d4af37 !important; padding: 10px;
 }
 [data-theme="marvel"] #search-bar::placeholder { color: rgba(212, 175, 55, 0.5); }
-/* Switch Toggle Marvel */
 [data-theme="marvel"] .switch .slider { background: #4a0000; border: 1px solid #d4af37; }
 [data-theme="marvel"] .switch .slider::before { background: #d4af37; box-shadow: 0 0 5px #d4af37; }
 [data-theme="marvel"] .switch input:checked + .slider { background: #d4af37; }
 [data-theme="marvel"] .switch input:checked + .slider::before { background: #4a0000; }
 
 /* 2. TEMA PIXEL ART (Retro Gaming Vibe) */
-
 [data-theme="pixel"] {
     background-color: #2b2bcc; 
     font-family: 'Press Start 2P', monospace !important; 
@@ -562,28 +575,19 @@ body {
     border: 4px solid #fff;
 }
 
-/* =========================================
-   FIX: PROGRESS BAR TEMA PIXEL (100% 8-BIT)
-   ========================================= */
-
-/* 1. Matikan sifat bawaan browser dan accent-color */
 [data-theme="pixel"] #progress-bar {
     -webkit-appearance: none !important;
     appearance: none !important;
-    background: transparent !important; /* Hapus background bawaan */
-    accent-color: transparent !important; /* BUNUH accent-color! */
+    background: transparent !important; 
+    accent-color: transparent !important; 
 }
-
-/* 2. Bikin Jalur (Track) kotak kaku */
 [data-theme="pixel"] #progress-bar::-webkit-slider-runnable-track {
     width: 100%;
     height: 8px;
     background: #0000aa;
-    border: 2px solid #ffffff; /* Garis pinggir jalur */
+    border: 2px solid #ffffff; 
     border-radius: 0;
 }
-
-/* 3. Bikin Titik (Thumb) jadi balok murni */
 [data-theme="pixel"] #progress-bar::-webkit-slider-thumb {
     -webkit-appearance: none !important;
     appearance: none !important;
@@ -591,13 +595,12 @@ body {
     width: 12px;
     background: #ffffff;
     border: 2px solid #000000;
-    border-radius: 0 !important; /* Wajib 0 biar nggak ada lengkungan */
-    margin-top: -6px; /* Tarik ke atas dikit biar posisinya pas di tengah jalur */
-    box-shadow: 2px 2px 0px #000000; /* Shadow balok ala Dingdong */
+    border-radius: 0 !important; 
+    margin-top: -6px; 
+    box-shadow: 2px 2px 0px #000000; 
     cursor: pointer;
 }
 
-/* KUSTOMISASI TOMBOL PIXEL ART */
 [data-theme="pixel"] .btn-main, 
 [data-theme="pixel"] .btn-secondary {
     border-radius: 0 !important; 
@@ -605,18 +608,25 @@ body {
     background: #000;
     padding: 2px;
     color: #fff;
-    box-shadow: 4px 4px 0px #000; /* Shadow kotak 8-bit */
-    transition: none !important; /* Matikan animasi smooth biar kaku */
+    box-shadow: 4px 4px 0px #000; 
+    transition: none !important; 
 }
 [data-theme="pixel"] .btn-main { 
     width: auto; 
     padding: 10px 15px; 
 }
-/* Efek tombol ditekan ala mesin Dingdong / Gameboy */
 [data-theme="pixel"] .btn-main:active,
 [data-theme="pixel"] .btn-secondary:active {
     transform: translate(4px, 4px);
     box-shadow: 0px 0px 0px #000;
+}
+
+/* WARNA AKTIF/KLIK TEMA PIXEL */
+[data-theme="pixel"] .sub-control-btn.active,
+[data-theme="pixel"] #volume-icon:active,
+[data-theme="pixel"] .header-btn:active {
+    color: #fff !important;
+    text-shadow: 2px 2px 0px #000;
 }
 
 [data-theme="pixel"] #playlist-ul::-webkit-scrollbar-thumb { background: #fff; border-radius: 0; }
@@ -654,7 +664,6 @@ body {
     background: #000 !important; color: #fff !important; border: 2px solid #fff !important;
     border-radius: 0 !important; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px;
 }
-/* Switch Toggle Pixel */
 [data-theme="pixel"] .switch .slider { background: #000; border: 2px solid #fff; border-radius: 0; }
 [data-theme="pixel"] .switch .slider::before { background: #fff; border: 2px solid #000; border-radius: 0; height: 14px; width: 14px; left: 2px; bottom: 2px; }
 [data-theme="pixel"] .switch input:checked + .slider { background: #fff; border-color: #000; }
@@ -663,14 +672,8 @@ body {
 [data-theme="pixel"] .header-btn:hover {
     color: #7b7bff ;
 }
-/* =========================================
-   IMPORT CUSTOM FONTS (GOOGLE FONTS)
-   ========================================= */
 
-
-/* =========================================
-   3. TEMA MINECRAFT (Blocky & Dirt/Grass)
-   ========================================= */
+/* 3. TEMA MINECRAFT (Blocky & Dirt/Grass) */
 [data-theme="minecraft"] {
     background-color: #5b3b1d; 
     font-family: 'Press Start 2P', monospace !important;
@@ -690,11 +693,10 @@ body {
     color: #ffffff;
     text-shadow: 2px 2px 0px #3b2712;
 }
-/* FONT KHUSUS JUDUL LAGU MINECRAFT */
 [data-theme="minecraft"] #song-title { 
     font-size: 14px; 
     line-height: 1.5;
-    color: #2e600a; /* Warna hijau rumput */
+    color: #2e600a; 
 }
 [data-theme="minecraft"] .album-art {
     border-radius: 0;
@@ -712,6 +714,14 @@ body {
 }
 [data-theme="minecraft"] .btn-main:active {
     border: 3px solid #ffffff; border-top-color: #3e3e3e; border-left-color: #3e3e3e;
+}
+
+/* WARNA AKTIF/KLIK TEMA MINECRAFT */
+[data-theme="minecraft"] .sub-control-btn.active,
+[data-theme="minecraft"] #volume-icon:active,
+[data-theme="minecraft"] .header-btn:active {
+    color: #5fa032 !important;
+    text-shadow: 2px 2px 0px #3b2712;
 }
 
 [data-theme="minecraft"] #playlist-ul::-webkit-scrollbar-thumb { background: #5fa032; border: 2px solid #3b2712; border-radius: 0; }
@@ -748,7 +758,7 @@ body {
 [data-theme="minecraft"] .popup-content {
     background: #866043;
     border: 4px solid #3b2712;
-    border-top: 14px solid #5fa032; /* Grass block di atas modal */
+    border-top: 14px solid #5fa032; 
     border-radius: 0 !important;
     box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.7);
 }
@@ -780,15 +790,11 @@ body {
     border: 3px solid #3e3e3e !important; border-top-color: #111 !important; border-left-color: #111 !important;
     border-radius: 0 !important; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px;
 }
-/* Switch Toggle Minecraft */
 [data-theme="minecraft"] .switch .slider { background: #c6c6c6; border: 2px solid #3e3e3e; border-radius: 0; }
 [data-theme="minecraft"] .switch .slider::before { background: #fff; border: 2px solid #3e3e3e; border-radius: 0; height: 14px; width: 14px; left: 2px; bottom: 2px; }
 [data-theme="minecraft"] .switch input:checked + .slider { background: #5fa032; border-color: #3b2712; }
 
-
-/* =========================================
-   4. TEMA SPIDER-MAN (Red & Blue Web Slinger)
-   ========================================= */
+/* 4. TEMA SPIDER-MAN (Red & Blue Web Slinger) */
 [data-theme="spiderman"] {
     background-color: #043673; 
     background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 15px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 15px);
@@ -799,15 +805,14 @@ body {
     border-radius: 15px;
     box-shadow: 0 0 30px rgba(223, 31, 45, 0.4), 0 0 15px rgba(4, 54, 115, 0.6);
 }
-/* FONT KHUSUS JUDUL LAGU SPIDER-MAN (Khas Komik) */
 [data-theme="spiderman"] #song-title {
     font-family: 'Bangers', cursive !important;
     font-size: 26px;
     color: #df1f2d;
     letter-spacing: 2px;
-    -webkit-text-stroke: 0.1px #ffffff; /* Garis pinggir hitam */
-    text-shadow: 3px 3px 0px #043673; /* Bayangan biru */
-    transform: skewY(-5deg); /* DIMIRINGIN BIAR KAYAK LOGO FILM! */
+    -webkit-text-stroke: 0.1px #ffffff; 
+    text-shadow: 3px 3px 0px #043673; 
+    transform: skewY(-5deg); 
     margin-bottom: 5px;
 }
 [data-theme="spiderman"] .app-title {
@@ -827,11 +832,18 @@ body {
     box-shadow: 0 5px 15px rgba(223, 31, 45, 0.6);
 }
 
-[data-theme="spiderman"] .sub-control-btn,
-[data-theme="spiderman"] #volume-icon, 
+/* PERBAIKAN: Spiderman sekarang tidak "mengunci" tombol shuffle/volume secara permanen */
 [data-theme="spiderman"] #playlist-ul li.active,
 [data-theme="spiderman"] .header-btn:hover {
     color: #df1f2d;
+}
+
+/* WARNA AKTIF/KLIK TEMA SPIDERMAN */
+[data-theme="spiderman"] .sub-control-btn.active,
+[data-theme="spiderman"] #volume-icon:active,
+[data-theme="spiderman"] .header-btn:active {
+    color: #df1f2d !important;
+    text-shadow: 0 0 10px rgba(223, 31, 45, 0.8);
 }
 
 [data-theme="spiderman"] input[type="range"] {
@@ -872,15 +884,12 @@ body {
     border-radius: 8px !important; padding: 10px;
 }
 [data-theme="spiderman"] #search-bar:focus { border-color: #df1f2d !important; outline: none; }
-/* Switch Toggle Spiderman */
 [data-theme="spiderman"] .switch .slider { background: #043673; border: 1px solid #df1f2d; }
 [data-theme="spiderman"] .switch .slider::before { background: #fff; border: 2px solid #df1f2d; height: 16px; width: 16px; left: 2px; bottom: 2px; }
 [data-theme="spiderman"] .switch input:checked + .slider { background: #df1f2d; border-color: #043673; }
 [data-theme="spiderman"] .switch input:checked + .slider::before { border-color: #043673; }
 
-/* =========================================
-   5. TEMA TOY STORY (Andy's Room / Buzz & Woody)
-   ========================================= */
+/* 5. TEMA TOY STORY (Andy's Room / Buzz & Woody) */
 [data-theme="toystory"] {
     background-color: #87CEEB; 
 }
@@ -890,13 +899,12 @@ body {
     border-radius: 25px;
     box-shadow: 8px 8px 0px #223ca9; 
 }
-/* FONT KHUSUS JUDUL LAGU TOY STORY (Khas Pixar) */
 [data-theme="toystory"] #song-title {
     font-family: 'Chewy', cursive !important;
     font-size: 28px;
-    color: #fff000; /* Kuning cerah */
-    -webkit-text-stroke: 1.5px #ff0000; /* Garis pinggir merah */
-    text-shadow: 3px 3px 0px #223ca9; /* Bayangan biru tebal */
+    color: #fff000; 
+    -webkit-text-stroke: 1.5px #ff0000; 
+    text-shadow: 3px 3px 0px #223ca9; 
     letter-spacing: 1.5px;
 }
 [data-theme="toystory"] .app-title {
@@ -908,7 +916,6 @@ body {
     color: #223ca9 ; font-weight: bold;
 }
 
-[data-theme="toystory"] 
 [data-theme="toystory"] .album-art {
     border-radius: 12px; border: 5px solid #223ca9; background: #fff; 
 }
@@ -927,6 +934,20 @@ body {
 
 [data-theme="toystory"] .header-btn:hover {
     color: #223ca9;
+}
+
+/* PERBAIKAN: Toy Story tidak lagi "mengunci" warna tombol shuffle/volume secara permanen */
+[data-theme="toystory"] #playlist-ul li.active,
+[data-theme="toystory"] .header-btn:hover {
+    color: #fff000;
+}
+
+/* WARNA AKTIF/KLIK TEMA TOY STORY */
+[data-theme="toystory"] .sub-control-btn.active,
+[data-theme="toystory"] #volume-icon,
+[data-theme="toystory"] .header-btn:active {
+    color: #fff000 !important;
+    text-shadow: 0 0 10px rgba(255, 240, 0, 0.8);
 }
 
 [data-theme="toystory"] .progress-container input[type="range"]::-webkit-slider-thumb {
@@ -955,7 +976,7 @@ body {
 [data-theme="toystory"] #playlist-ul li span {
     font-family: 'Chewy', cursive !important;
     font-size: 12px;
-    color: #fff000; /* Kuning cerah */
+    color: #fff000; 
     letter-spacing: 1.5px;
     white-space: nowrap;
     overflow: hidden;
@@ -975,13 +996,7 @@ body {
 [data-theme="toystory"] .mode-btn {
     background: #223ca9; color: #fff000; border: 2px solid #ff0000; border-radius: 12px; font-weight: bold;
 }
-[data-theme="toystory"] .sub-control-btn,
-[data-theme="toystory"] .sub-control-btn:active,
-[data-theme="toystory"] #volume-icon, 
-[data-theme="toystory"] #playlist-ul li.active,
-[data-theme="toystory"] .header-btn:hover {
-    color: #fff000;
-}
+
 [data-theme="toystory"] .mode-btn.active { background: #90ee90; color: #551a8b; border-color: #223ca9; }
 [data-theme="toystory"] #search-bar, 
 [data-theme="toystory"] select#theme-selector {
@@ -989,18 +1004,15 @@ body {
     border-radius: 12px !important; font-weight: bold; padding: 10px;
 }
 [data-theme="toystory"] #search-bar::placeholder { color: #999; }
-/* Switch Toggle Toy Story */
 [data-theme="toystory"] .switch .slider { background: #223ca9; border: 2px solid #ff0000; }
 [data-theme="toystory"] .switch .slider::before { background: #fff000; border: 2px solid #ff0000; height: 16px; width: 16px; left: 1px; bottom: 1px; }
 [data-theme="toystory"] .switch input:checked + .slider { background: #fff000; border-color: #223ca9; }
 [data-theme="toystory"] .switch input:checked + .slider::before { background: #ff0000; border-color: #223ca9; }
 
-/* =========================================
-   6. TEMA TERMINAL HACKER (Dev Mode)
-   ========================================= */
+/* 6. TEMA TERMINAL HACKER (Dev Mode) */
 [data-theme="hacker"] {
     background-color: #000000;
-    font-family: 'Courier New', Courier, monospace !important; /* Font coding */
+    font-family: 'Courier New', Courier, monospace !important; 
 }
 [data-theme="hacker"] .player-container {
     background: #000000;
@@ -1013,10 +1025,10 @@ body {
 [data-theme="hacker"] span,
 [data-theme="hacker"] i {
     font-family: 'Courier New', Courier, monospace !important;
-    color: #00ff00 !important; /* Hijau neon */
+    color: #00ff00 !important; 
 }
 [data-theme="hacker"] .album-art {
-    filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); /* Foto album jadi efek hijau terminal! */
+    filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); 
     border: 1px dashed #00ff00;
     border-radius: 0;
 }
@@ -1033,7 +1045,15 @@ body {
 }
 [data-theme="hacker"] .btn-main:hover i,
 [data-theme="hacker"] .btn-secondary:hover i {
-    color: #000000 !important; /* Ikon jadi hitam pas di-hover */
+    color: #000000 !important; 
+}
+
+/* WARNA AKTIF/KLIK TEMA HACKER */
+[data-theme="hacker"] .sub-control-btn.active,
+[data-theme="hacker"] #volume-icon:active,
+[data-theme="hacker"] .header-btn:active {
+    color: #00ff00 !important;
+    text-shadow: 0 0 10px #00ff00;
 }
 
 [data-theme="hacker"] input[type="range"] {
@@ -1045,7 +1065,7 @@ body {
 }
 [data-theme="hacker"] input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none !important; appearance: none !important;
-    height: 16px; width: 8px; background: #00ff00; /* Bentuk kursor kedap-kedip */
+    height: 16px; width: 8px; background: #00ff00; 
     border: none; border-radius: 0 !important;
     margin-top: -7px; box-shadow: 0 0 10px #00ff00; cursor: pointer;
 }
@@ -1078,7 +1098,6 @@ body {
     border-radius: 0 !important; font-family: 'Courier New', monospace; padding: 10px;
 }
 [data-theme="hacker"] #search-bar::placeholder { color: rgba(0, 255, 0, 0.5); }
-/* Switch Toggle Terminal */
 [data-theme="hacker"] .switch .slider { background: #000; border: 1px solid #00ff00; border-radius: 0; }
 [data-theme="hacker"] .switch .slider::before { background: #00ff00; border-radius: 0; height: 18px; width: 8px; left: 2px; bottom: 1px; }
 [data-theme="hacker"] .switch input:checked + .slider { background: #00ff00; }
@@ -1087,11 +1106,11 @@ body {
 /* Mengatur layout saat lebar jendela dikecilkan */
 @media (max-width: 350px) {
     .player-container {
-        padding: 20px 15px; /* Mengurangi padding luar agar ruang dalam lebih luas */
+        padding: 20px 15px; 
     }
     
     .main-playback {
-        gap: 8px; /* Mengurangi jarak antar tombol play, next, prev */
+        gap: 8px; 
     }
 
     .btn-main {
@@ -1102,10 +1121,9 @@ body {
 
     [data-theme="minecraft"] .btn-main, 
     [data-theme="minecraft"] .btn-secondary {
-        padding: 8px 8px; /* Memaksa tombol Minecraft ikut mengecil di layar sempit */
+        padding: 8px 8px; 
     }
 
-    /* Memaksa tombol play ikut mengecil di layar sempit */
     #play-btn {
         width: 50px !important;
         height: 50px !important;
