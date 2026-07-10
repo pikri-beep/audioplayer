@@ -106,6 +106,10 @@ app.on('window-all-closed', () => {
         app.quit();
     }
 });
+    app.on('will-quit', () => {
+    // Lepaskan semua global shortcut agar tidak membajak keyboard PC pengguna
+    globalShortcut.unregisterAll();
+});
 }
 
 function createNotificationWindow() {
@@ -179,7 +183,7 @@ app.whenReady().then(() => {
     path.join(__dirname, "assets", "logo.png")
     );
 
-    globalShortcut.register('CommandOrControl+Space', () => {
+    globalShortcut.register('CommandOrControl+Shift+Space', () => {
     win.webContents.send("thumb-play");});
     globalShortcut.register('CommandOrControl+Right', () => {
     win.webContents.send("thumb-next");});
@@ -262,7 +266,7 @@ ipcMain.handle('get-metadata', async (event, filePath) => {
 });
 
 // Tambahkan di main.js
-ipcMain.handle('upload-custom-cover', async () => {
+ipcMain.handle('upload-custom-cover', async (event, songName) => {
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
         filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }]
@@ -270,11 +274,22 @@ ipcMain.handle('upload-custom-cover', async () => {
     
     if (!result.canceled) {
         const sourcePath = result.filePaths[0];
-        const destPath = path.join(__dirname, 'covers', 'custom-cover.jpg');
+        // Sekarang file disimpan menggunakan NAMA LAGU biar spesifik!
+        const destPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
         fs.copyFileSync(sourcePath, destPath);
-        return destPath; // Kirim path gambar baru
+        return destPath; 
     }
     return null;
+});
+
+// TAMBAHKAN MESIN UNTUK MENGHAPUS COVER:
+ipcMain.handle('remove-custom-cover', async (event, songName) => {
+    const targetPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
+    if (fs.existsSync(targetPath)) {
+        fs.unlinkSync(targetPath); // Hapus gambar custom dari komputer
+        return true;
+    }
+    return false;
 });
 
 ipcMain.on("player-state", (_, playing) => {

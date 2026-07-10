@@ -1,7 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bangers&family=Chewy&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bangers&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bangers&family=Chewy&family=Caveat:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
 
 * {
     margin: 0;
@@ -49,6 +47,8 @@ body {
     align-items: center;
     border: 2px solid var(--theme-border);
     box-shadow: 0 0 20px var(--theme-border);
+    
+
 }
 
 #album-art-img {
@@ -59,6 +59,7 @@ body {
     box-shadow: 0 0 25px var(--theme-glow);
     transition: box-shadow 0.5s ease-in-out;
 }
+
 
 .song-info {
     text-align: center;
@@ -104,6 +105,8 @@ body {
     align-items: center;
     margin-bottom: 25px;
 }
+
+
 
 .sub-control-btn {
     background: none;
@@ -698,7 +701,7 @@ body {
     border: 4px solid #ffffff;
     box-shadow: 4px 4px 0px #3b2712;
     filter: contrast(180%) saturate(200%) sepia(30%) brightness(90%);
-    image-rendering: cripsy-edges;
+    image-rendering: crisp-edges;
 }
 
 [data-theme="minecraft"] .btn-main, 
@@ -826,7 +829,8 @@ body {
 
 [data-theme="spiderman"] .sub-control-btn,
 [data-theme="spiderman"] #volume-icon, 
-[data-theme="spiderman"] #playlist-ul li.active {
+[data-theme="spiderman"] #playlist-ul li.active,
+[data-theme="spiderman"] .header-btn:hover {
     color: #df1f2d;
 }
 
@@ -970,6 +974,13 @@ body {
 [data-theme="toystory"] .setting-row span { color: #223ca9; font-weight: bold; font-size: 15px; }
 [data-theme="toystory"] .mode-btn {
     background: #223ca9; color: #fff000; border: 2px solid #ff0000; border-radius: 12px; font-weight: bold;
+}
+[data-theme="toystory"] .sub-control-btn,
+[data-theme="toystory"] .sub-control-btn:active,
+[data-theme="toystory"] #volume-icon, 
+[data-theme="toystory"] #playlist-ul li.active,
+[data-theme="toystory"] .header-btn:hover {
+    color: #fff000;
 }
 [data-theme="toystory"] .mode-btn.active { background: #90ee90; color: #551a8b; border-color: #223ca9; }
 [data-theme="toystory"] #search-bar, 

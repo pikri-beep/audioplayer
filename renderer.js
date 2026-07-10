@@ -16,14 +16,21 @@ const songArtistEl = document.getElementById('song-artist');
 const playlistUl = document.getElementById('playlist-ul');
 const { Vibrant } = require('node-vibrant/node');
 
-
 const songsFolder = path.join(__dirname, 'songs');
 let playlist = [];
 let currentSongIndex = 0;
 let isShuffle = false;
 let isRepeat = false;
+let unplayedShuffle = []; // Kantong memori untuk shuffle pintar
 
-let njoyList = JSON.parse(localStorage.getItem('njoyList')) || [];
+// Ambil data memori dengan aman (mencegah black screen)
+let njoyList = [];
+try {
+    njoyList = JSON.parse(localStorage.getItem('njoyList')) || [];
+} catch (error) {
+    console.warn("Memori lokal rusak, mereset daftar NJOY...", error);
+    njoyList = [];
+}
 let currentMode = 'all'; 
 
 // 1. Load Playlist dari folder songs
@@ -65,7 +72,7 @@ function renderPlaylist() {
         span.addEventListener('click', () => {
             currentSongIndex = index;
             loadSong(currentSongIndex);
-            audio.play();
+            audio.play().catch(err => console.log(err));
             playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
         });
 
@@ -95,13 +102,11 @@ function loadSong(index) {
     currentSongIndex = index;
     const songName = playlist[index];
     
-    // Simpan letak file lagu di variabel baru
     const filePath = path.join(songsFolder, songName);
     
     audio.src = filePath;
     renderPlaylist();
 
-    // Pisahkan nama file otomatis jadi Artis & Judul (jika ada tanda min '-')
     const cleanName = songName.replace('.mp3', '');
     if (cleanName.includes('-')) {
         const parts = cleanName.split('-');
@@ -112,24 +117,22 @@ function loadSong(index) {
         songArtistEl.innerText = "Unknown Artist";
     }
 
-    // +++ PANGGIL EKSTRAK METADATA DI SINI +++
-    extractMetadata(filePath);
-
-    // Cek apakah ada custom cover
-    const customCover = path.join(__dirname, 'covers', 'custom-cover.jpg');
-    if (fs.existsSync(customCover)) {
-        document.getElementById('album-art-img').src = `file://${customCover}?t=${new Date().getTime()}`;
-    } else {
-        // Panggil fungsi metadata aslinya (extractMetadata)
-        extractMetadata(audio.src);
-    }
+    // Panggil ekstrak metadata (Mencegah ganda)
+    extractMetadata(filePath).then(() => {
+        const specificCover = path.join(__dirname, 'covers', `${cleanName}-cover.jpg`);
+        // Timpa dengan custom cover secara langsung jika ada
+        if (fs.existsSync(specificCover)) {
+            document.getElementById('album-art-img').src = `file://${specificCover}?t=${new Date().getTime()}`;
+        }
+    });
 }
 
 // LOGIKA KONTROL
 function togglePlay() {
     if (playlist.length === 0) return;
     if (audio.paused) {
-        audio.play();
+        // Cegah crash kalau dipencet brutal
+        audio.play().catch(err => console.log("Play tertunda, memuat audio...", err));
         playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
     } else {
         audio.pause();
@@ -137,18 +140,16 @@ function togglePlay() {
     }
 }
 
-// Fungsi utama untuk mengatur transisi Fade Out dan Fade In
+// Transisi Fade Out dan Fade In
 function changeSongWithFade(newIndex) {
     if (playlist.length === 0) return;
     
-    // Ambil volume target saat ini (bisa saja user baru mengubah slider)
     if (volumeSlider) {
         targetVolume = volumeSlider.value / 100;
     }
     
     let currentVol = audio.volume;
     
-    // Proses Fade Out
     let fadeOutInterval = setInterval(() => {
         if (currentVol > 0.05) {
             currentVol -= 0.05; 
@@ -158,24 +159,30 @@ function changeSongWithFade(newIndex) {
             audio.pause();
             
             loadSong(newIndex);
-            audio.volume = 0; 
-            audio.play().catch(err => console.log("Play interrupted:", err));
-            playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
             
-            // Proses Fade In
-            let fadeInInterval = setInterval(() => {
-                if (audio.volume < targetVolume - 0.05) {
-                    audio.volume += 0.05; 
-                } else {
-                    audio.volume = targetVolume; // Kunci ke target volume asli
-                    clearInterval(fadeInInterval);
-                }
-            }, 40); 
+            if (isMuted) {
+                audio.volume = 0; // Kunci di 0, jangan jalankan Fade In
+                audio.play().catch(err => console.log(err));
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            } else {
+                audio.volume = 0; 
+                audio.play().catch(err => console.log(err));
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                
+                let fadeInInterval = setInterval(() => {
+                    if (audio.volume < targetVolume - 0.05) {
+                        audio.volume += 0.05; 
+                    } else {
+                        audio.volume = targetVolume; 
+                        clearInterval(fadeInInterval);
+                    }
+                }, 40); 
+            }
         }
     }, 30); 
 }
 
-// Update fungsi Next Song
+// Shuffle Pintar dan Next Song
 function nextSong() {
     if (playlist.length === 0) return;
     let nextIndex = currentSongIndex;
@@ -183,16 +190,21 @@ function nextSong() {
     if (isRepeat) {
         nextIndex = currentSongIndex;
     } else if (isShuffle) {
-        nextIndex = Math.floor(Math.random() * playlist.length);
+        if (unplayedShuffle.length === 0) {
+            for (let i = 0; i < playlist.length; i++) {
+                if (i !== currentSongIndex) unplayedShuffle.push(i);
+            }
+        }
+        const randomBagIndex = Math.floor(Math.random() * unplayedShuffle.length);
+        nextIndex = unplayedShuffle[randomBagIndex];
+        unplayedShuffle.splice(randomBagIndex, 1);
     } else {
         nextIndex = (currentSongIndex + 1) % playlist.length;
     }
     
-    // Panggil fungsi transisi alih-alih ganti langsung
     changeSongWithFade(nextIndex); 
 }
 
-// Update fungsi Prev Song
 function prevSong() {
     if (playlist.length === 0) return;
     let prevIndex = currentSongIndex;
@@ -205,18 +217,15 @@ function prevSong() {
         prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
     }
     
-    // Panggil fungsi transisi alih-alih ganti langsung
     changeSongWithFade(prevIndex);
 }
 
 async function extractMetadata(filePath) {
-    const albumArtImg = document.getElementById('album-art-img'); 
-    
+    const albumArtImg = document.getElementById('album-art-img');
     try {
         const metadata = await ipcRenderer.invoke('get-metadata', filePath);
         
         if (metadata) {
-            // 1. Atur teks judul, artis, dan notifikasi terlebih dahulu
             if (metadata.title) songTitleEl.innerText = metadata.title;
             if (metadata.artist) songArtistEl.innerText = metadata.artist;
             
@@ -226,13 +235,9 @@ async function extractMetadata(filePath) {
                 cover: metadata.coverPath || "covers/default.png" 
             });
 
-            // 2. Atur gambar cover dan ekstrak warna dinamis
             if (metadata.coverPath) {
-                // Update gambar di layar
                 albumArtImg.src = `file://${metadata.coverPath}?t=${new Date().getTime()}`;
                 
-                // LANGSUNG tembak lokasi path file-nya, jangan pakai elemen 'albumArtImg'
-                // Pakai .then() menyesuaikan versi node-vibrant 4+
                 Vibrant.from(metadata.coverPath).getPalette()
                     .then((palette) => {
                         if (palette && palette.Vibrant) {
@@ -244,19 +249,18 @@ async function extractMetadata(filePath) {
                         }
                     })
                     .catch((vibrantError) => {
-                        console.log("Vibrant gagal ekstrak warna (tapi aplikasi tetap jalan):", vibrantError);
+                        console.log("Vibrant error:", vibrantError);
                     });
 
             } else {
-                // Kalau lagu nggak ada cover, kembalikan gambar & warna ke default
-                albumArtImg.src = "covers/default.png";
+                albumArtImg.src = "file://" + path.join(__dirname, "covers", "default.png");
                 document.documentElement.style.setProperty('--theme-glow', '#a855f7');
                 document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
             }
         }
     } catch (error) {
         console.error("Gagal ambil metadata:", error);
-        albumArtImg.src = "covers/default.png";
+        albumArtImg.src = "file://" + path.join(__dirname, "covers", "default.png");
     }
 }
 
@@ -265,7 +269,6 @@ nextBtn.addEventListener('click', nextSong);
 prevBtn.addEventListener('click', prevSong);
 audio.addEventListener('ended', nextSong);
 
-// Progress bar slider jalan
 audio.addEventListener('timeupdate', () => {
     if (audio.duration) {
         progressBar.value = (audio.currentTime / audio.duration) * 100;
@@ -283,39 +286,32 @@ progressBar.addEventListener('input', () => {
     audio.currentTime = (progressBar.value / 100) * audio.duration;
 });
 
-// Fitur Volume Slider & Memori Target Volume
-// ==========================================
-// FITUR VOLUME & MUTE
-// ==========================================
+// Fitur Volume & Mute
 let targetVolume = 0.7; 
-let lastVolume = 0.7; // Menyimpan volume terakhir sebelum di-mute
+let lastVolume = 0.7; 
 let isMuted = false;
 
 const volumeSlider = document.getElementById('volume-slider');
 const volumeText = document.getElementById('volume-text');
 const volumeIcon = document.getElementById('volume-icon');
 
-// Fungsi untuk ganti ikon volume sesuai persentase
 function updateVolumeIcon(vol) {
     if (!volumeIcon) return;
     if (vol === 0 || isMuted) {
-        volumeIcon.className = 'fa-solid fa-volume-xmark'; // Ikon Silang
+        volumeIcon.className = 'fa-solid fa-volume-xmark'; 
     } else if (vol < 0.5) {
-        volumeIcon.className = 'fa-solid fa-volume-low'; // Ikon Suara Kecil
+        volumeIcon.className = 'fa-solid fa-volume-low'; 
     } else {
-        volumeIcon.className = 'fa-solid fa-volume-high'; // Ikon Suara Keras
+        volumeIcon.className = 'fa-solid fa-volume-high'; 
     }
 }
 
-// Fungsi utama untuk Mute / Unmute
 function toggleMute() {
     if (isMuted) {
-        // UNMUTE: Kembalikan ke volume sebelumnya
         isMuted = false;
-        audio.volume = lastVolume > 0 ? lastVolume : 0.7; // Jaga-jaga kalau last volumenya 0
+        audio.volume = lastVolume > 0 ? lastVolume : 0.7; 
         if (volumeSlider) volumeSlider.value = audio.volume * 100;
     } else {
-        // MUTE: Simpan volume saat ini, lalu nol-kan
         lastVolume = audio.volume;
         isMuted = true;
         audio.volume = 0;
@@ -326,27 +322,22 @@ function toggleMute() {
     updateVolumeIcon(audio.volume);
 }
 
-// Pasang klik di ikon volume
-if (volumeIcon) {
-    volumeIcon.addEventListener('click', toggleMute);
-}
+if (volumeIcon) volumeIcon.addEventListener('click', toggleMute);
 
-// Pasang sistem saat slider digeser
 if (volumeSlider) {
     volumeSlider.addEventListener('input', () => {
         targetVolume = volumeSlider.value / 100;
         audio.volume = targetVolume;
-        isMuted = targetVolume === 0; // Kalau ditarik sampai 0, otomatis dianggap mute
+        isMuted = targetVolume === 0; 
         
         if (volumeText) volumeText.innerText = `${volumeSlider.value}%`;
         updateVolumeIcon(targetVolume);
     });
 }
 
-// Tangkap sinyal shortcut Mute dari keyboard
 ipcRenderer.on('shortcut-mute', toggleMute);
 
-// Tombol Tambah Lagu (+)
+// Tombol Tambah Lagu
 document.getElementById('add-song-btn').addEventListener('click', async () => {
     const filePaths = await ipcRenderer.invoke('open-file-dialog');
     if (filePaths && filePaths.length > 0) {
@@ -360,12 +351,10 @@ document.getElementById('add-song-btn').addEventListener('click', async () => {
     }
 });
 
-// Navigasi Popup Playlist
 const popup = document.getElementById('playlist-popup');
 document.getElementById('playlist-toggle-btn').addEventListener('click', () => popup.classList.add('show'));
 document.getElementById('close-popup-btn').addEventListener('click', () => popup.classList.remove('show'));
 
-// Mode Semua / Queue
 document.getElementById('btn-mode-all').addEventListener('click', () => {
     currentMode = 'all';
     document.getElementById('btn-mode-all').classList.add('active');
@@ -379,60 +368,46 @@ document.getElementById('btn-mode-njoy').addEventListener('click', () => {
     renderPlaylist();
 });
 
-// Fitur Cari Musik
-document.getElementById('search-bar').addEventListener('input', (e) => {
-    const keyword = e.target.value.toLowerCase();
-    const items = playlistUl.querySelectorAll('li');
-    items.forEach(li => {
-        li.style.display = li.innerText.toLowerCase().includes(keyword) ? 'flex' : 'none';
-    });
-});
-
-// Toggle Shuffle
 shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
-    // Ubah warna ikon biar ketahuan lagi aktif atau nggak
     shuffleBtn.style.color = isShuffle ? 'var(--theme-glow)' : '#aaa';
 });
 
-// Toggle Repeat
 repeatBtn.addEventListener('click', () => {
     isRepeat = !isRepeat;
-    // Ubah warna ikon biar ketahuan lagi aktif atau nggak
     repeatBtn.style.color = isRepeat ? 'var(--theme-glow)' : '#aaa';
 });
 
-//custom cover upload
-document.getElementById('upload-cover-btn').addEventListener('click', async () => {
-    const newCoverPath = await ipcRenderer.invoke('upload-custom-cover');
+// Custom cover
+const uploadCoverBtn = document.getElementById('upload-cover-btn');
+uploadCoverBtn.addEventListener('click', async () => {
+    if (playlist.length === 0) return;
+    const currentSongName = playlist[currentSongIndex].replace('.mp3', '');
+    const newCoverPath = await ipcRenderer.invoke('upload-custom-cover', currentSongName);
     if (newCoverPath) {
-        // Langsung update UI
         document.getElementById('album-art-img').src = `file://${newCoverPath}?t=${new Date().getTime()}`;
     }
 });
 
-audio.addEventListener("play", () => {
-    ipcRenderer.send("player-state", true);
+uploadCoverBtn.addEventListener('contextmenu', async (e) => {
+    e.preventDefault(); 
+    if (playlist.length === 0) return;
+    const currentSongName = playlist[currentSongIndex].replace('.mp3', '');
+    const isRemoved = await ipcRenderer.invoke('remove-custom-cover', currentSongName);
+    if (isRemoved) {
+        const filePath = path.join(songsFolder, playlist[currentSongIndex]);
+        extractMetadata(filePath);
+    }
 });
 
-audio.addEventListener("pause", () => {
-    ipcRenderer.send("player-state", false);
-});
+audio.addEventListener("play", () => ipcRenderer.send("player-state", true));
+audio.addEventListener("pause", () => ipcRenderer.send("player-state", false));
 
-ipcRenderer.on("thumb-play", () => {
-    togglePlay();
-});
-
-ipcRenderer.on("thumb-next", () => {
-    nextSong();
-});
-
-ipcRenderer.on("thumb-prev", () => {
-    prevSong();
-});
+ipcRenderer.on("thumb-play", () => togglePlay());
+ipcRenderer.on("thumb-next", () => nextSong());
+ipcRenderer.on("thumb-prev", () => prevSong());
 
 const SETTINGS_KEY = "njoy-settings";
-
 let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
     tray: true,
     notification: true,
@@ -440,24 +415,17 @@ let settings = JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {
 };
 
 function saveSettings() {
-    localStorage.setItem(
-        SETTINGS_KEY,
-        JSON.stringify(settings)
-    );
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 const settingsBtn = document.getElementById("settings-btn");
 const settingsPanel = document.getElementById("settings-panel");
-
 const trayToggle = document.getElementById("tray-toggle");
 const notificationToggle = document.getElementById("notification-toggle");
 const alwaysOnTopToggle = document.getElementById("ontop-toggle");
 
-settingsBtn.addEventListener("click", () => {
-    settingsPanel.classList.toggle("show");
-});
+settingsBtn.addEventListener("click", () => settingsPanel.classList.toggle("show"));
 
-// isi toggle sesuai setting
 trayToggle.checked = settings.tray;
 notificationToggle.checked = settings.notification;
 alwaysOnTopToggle.checked = settings.alwaysOnTop;
@@ -465,21 +433,18 @@ alwaysOnTopToggle.checked = settings.alwaysOnTop;
 trayToggle.addEventListener("change", () => {
     settings.tray = trayToggle.checked;
     saveSettings();
-    // AKTIFKAN INI: Kirim status tray ke main process
     ipcRenderer.send("toggle-tray", settings.tray);
 });
 
 notificationToggle.addEventListener("change", () => {
     settings.notification = notificationToggle.checked;
     saveSettings();
-    // AKTIFKAN INI: Kirim status notifikasi ke main process
     ipcRenderer.send("toggle-notification", settings.notification);
 });
 
 alwaysOnTopToggle.addEventListener("change", () => {
     settings.alwaysOnTop = alwaysOnTopToggle.checked;
     saveSettings();
-    // AKTIFKAN & TAMBAHKAN INI: Kirim status always on top ke main process
     ipcRenderer.send("toggle-ontop", settings.alwaysOnTop);
 });
 
@@ -487,24 +452,16 @@ ipcRenderer.send("toggle-ontop", settings.alwaysOnTop);
 ipcRenderer.send("toggle-notification", settings.notification);
 ipcRenderer.send("toggle-tray", settings.tray);
 
-// ==========================================
-// FITUR CUSTOM THEME
-// ==========================================
 const themeSelector = document.getElementById('theme-selector');
-// Cek apakah ada tema yang tersimpan sebelumnya, kalau tidak pakai 'default'
 const savedTheme = localStorage.getItem('njoy_theme') || 'default';
 
-// Terapkan tema saat aplikasi pertama kali dibuka
 document.body.setAttribute('data-theme', savedTheme);
 if (themeSelector) themeSelector.value = savedTheme;
 
-// Dengarkan jika user mengganti pilihan tema di dropdown
 if (themeSelector) {
     themeSelector.addEventListener('change', (e) => {
         const selectedTheme = e.target.value;
-        // Ganti tema di layar
         document.body.setAttribute('data-theme', selectedTheme);
-        // Simpan ke memori lokal
         localStorage.setItem('njoy_theme', selectedTheme);
     });
 }
@@ -517,12 +474,11 @@ if (searchBar && playlistUl) {
         
         Array.from(songItems).forEach(item => {
             const songName = item.textContent.toLowerCase();
-            // Langsung saring lagu detik itu juga!
-            item.style.display = songName.includes(searchTerm) ? 'block' : 'none'; 
+            item.style.display = songName.includes(searchTerm) ? 'flex' : 'none'; 
         });
     });
 }
 
+
+
 loadPlaylist();
-
-
