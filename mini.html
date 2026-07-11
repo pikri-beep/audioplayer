@@ -5,6 +5,9 @@
     <title>NJOY Mini</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Mengambil font keren dari google khusus untuk widget mini */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bangers&family=Chewy&family=Caveat:wght@400;700&display=swap');
+        
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
         body {
@@ -18,7 +21,7 @@
         }
 
         .widget-container {
-            /* Efek Glassmorphism (Kaca Buram) */
+            /* Efek Glassmorphism (Kaca Buram) default */
             background: rgba(25, 25, 25, 0.85);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
@@ -32,6 +35,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             /* Bikin seluruh area widget bisa di-drag dengan mouse */
             -webkit-app-region: drag; 
+            transition: all 0.3s ease;
         }
 
         .cover-art {
@@ -40,6 +44,7 @@
             border-radius: 12px;
             object-fit: cover;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .song-info {
@@ -95,6 +100,56 @@
             -webkit-app-region: no-drag;
         }
         .expand-btn:hover { color: #fff; }
+
+        /* =========================================
+           TEMA UNTUK MINI PLAYER MENGAMBANG
+           ========================================= */
+        /* 1. MARVEL */
+        [data-theme="marvel"] .widget-container { background: linear-gradient(145deg, rgba(102, 0, 0, 0.95), rgba(51, 0, 0, 0.95)); border: 1px solid #d4af37; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); }
+        [data-theme="marvel"] h3 { color: #d4af37; font-family: 'Bangers', sans-serif; letter-spacing: 1px; font-size: 18px; }
+        [data-theme="marvel"] p { color: #fff; }
+        [data-theme="marvel"] button:hover { color: #df1f2d; transform: scale(1.1); }
+        [data-theme="marvel"] button { color: #d4af37; }
+
+        /* 2. PIXEL ART */
+        [data-theme="pixel"] * { font-family: 'Press Start 2P', monospace !important; }
+        [data-theme="pixel"] .widget-container { background: #0000aa; border: 4px solid #fff; border-radius: 0; box-shadow: 4px 4px 0px #000; }
+        [data-theme="pixel"] .cover-art { border-radius: 0; border: 2px solid #fff; }
+        [data-theme="pixel"] h3 { font-size: 9px; text-shadow: 2px 2px 0px #000; }
+        [data-theme="pixel"] p { font-size: 7px; color: #fff; }
+        [data-theme="pixel"] button { color: #fff; text-shadow: 2px 2px 0px #000; }
+        [data-theme="pixel"] button:hover { color: #aaa; transform: none; }
+
+        /* 3. MINECRAFT */
+        [data-theme="minecraft"] * { font-family: 'Press Start 2P', monospace !important; }
+        [data-theme="minecraft"] .widget-container { background: #866043; border: 4px solid #3b2712; border-top: 8px solid #5fa032; border-radius: 0; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
+        [data-theme="minecraft"] .cover-art { border-radius: 0; border: 2px solid #fff; image-rendering: crisp-edges; }
+        [data-theme="minecraft"] h3 { font-size: 9px; color: #2e600a; text-shadow: 2px 2px 0px #3b2712; }
+        [data-theme="minecraft"] p { font-size: 7px; color: #fff; }
+        [data-theme="minecraft"] button { color: #c6c6c6; }
+        [data-theme="minecraft"] button:hover { color: #fff; transform: none; }
+
+        /* 4. SPIDERMAN */
+        [data-theme="spiderman"] .widget-container { background: rgba(17, 17, 17, 0.95); border: 2px solid #df1f2d; box-shadow: 0 0 20px rgba(4, 54, 115, 0.8); }
+        [data-theme="spiderman"] h3 { font-family: 'Bangers', cursive !important; font-size: 18px; color: #df1f2d; transform: skewY(-5deg); text-shadow: 2px 2px 0px #043673; display: inline-block;}
+        [data-theme="spiderman"] button { color: #df1f2d; }
+        [data-theme="spiderman"] button:hover { color: #043673; text-shadow: 0 0 5px #df1f2d;}
+        [data-theme="spiderman"] .cover-art { border: 2px solid #df1f2d; }
+
+        /* 5. TOY STORY */
+        [data-theme="toystory"] .widget-container { background: rgba(255, 255, 255, 0.95); border: 3px solid #ff0000; box-shadow: 6px 6px 0px #223ca9; border-radius: 20px; }
+        [data-theme="toystory"] h3 { font-family: 'Chewy', cursive !important; font-size: 18px; color: #fff000; -webkit-text-stroke: 1px #ff0000; text-shadow: 2px 2px 0px #223ca9; }
+        [data-theme="toystory"] p { color: #223ca9; font-weight: bold; }
+        [data-theme="toystory"] button { color: #223ca9; }
+        [data-theme="toystory"] button:hover { color: #551a8b; }
+        [data-theme="toystory"] .cover-art { border: 3px solid #223ca9; }
+
+        /* 6. HACKER TERMINAL */
+        [data-theme="hacker"] * { font-family: 'Courier New', Courier, monospace !important; }
+        [data-theme="hacker"] .widget-container { background: rgba(0, 0, 0, 0.95); border: 1px solid #00ff00; border-radius: 0; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
+        [data-theme="hacker"] h3, [data-theme="hacker"] p, [data-theme="hacker"] button { color: #00ff00; }
+        [data-theme="hacker"] button:hover { color: #fff; text-shadow: 0 0 5px #00ff00; }
+        [data-theme="hacker"] .cover-art { filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); border-radius: 0; border: 1px dashed #00ff00; }
     </style>
 </head>
 <body>
@@ -119,8 +174,13 @@
     <script>
         const { ipcRenderer } = require('electron');
 
-        // Menerima data lagu dari Jendela Utama
+        // Menerima data lagu dan TEMA dari Jendela Utama
         ipcRenderer.on('update-mini-player', (event, data) => {
+            // TERAPKAN TEMA YANG DIKIRIM DARI JENDELA UTAMA!
+            if(data.theme) {
+                document.body.setAttribute('data-theme', data.theme);
+            }
+
             document.getElementById('title').innerText = data.title;
             document.getElementById('artist').innerText = data.artist;
             document.getElementById('cover').src = data.cover;

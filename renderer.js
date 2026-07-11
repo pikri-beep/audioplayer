@@ -399,7 +399,8 @@ function syncToMiniPlayer() {
         title: songTitleEl.innerText,
         artist: songArtistEl.innerText,
         cover: document.getElementById('album-art-img').src,
-        isPlaying: !audio.paused
+        isPlaying: !audio.paused,
+        theme: document.body.getAttribute('data-theme') || 'default'
     });
 }
 
