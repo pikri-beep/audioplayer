@@ -8,6 +8,7 @@ const prevBtn = document.getElementById('prev-btn');
 const nextBtn = document.getElementById('next-btn');
 const shuffleBtn = document.getElementById('shuffle-btn');
 const repeatBtn = document.getElementById('repeat-btn');
+const miniPlayerBtn = document.getElementById('mini-player-btn');
 const progressBar = document.getElementById('progress-bar');
 const currentTimeEl = document.getElementById('current-time');
 const durationEl = document.getElementById('duration');
@@ -368,16 +369,42 @@ document.getElementById('btn-mode-njoy').addEventListener('click', () => {
     renderPlaylist();
 });
 
-// FIX LOGIKA WARNA TOMBOL SHUFFLE DAN REPEAT (Hanya Toggle Class)
 shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
-    shuffleBtn.classList.toggle('active', isShuffle);
+    shuffleBtn.style.color = isShuffle ? 'var(--theme-glow)' : '#aaa';
 });
 
 repeatBtn.addEventListener('click', () => {
     isRepeat = !isRepeat;
-    repeatBtn.classList.toggle('active', isRepeat);
+    repeatBtn.style.color = isRepeat ? 'var(--theme-glow)' : '#aaa';
 });
+
+// LOGIKA MINI PLAYER
+let isMiniMode = false;
+if (miniPlayerBtn) {
+    miniPlayerBtn.addEventListener('click', () => {
+        isMiniMode = !isMiniMode;
+        ipcRenderer.send('toggle-mini-player', isMiniMode);
+    });
+}
+
+// Kembalikan status tombol kalau di-expand dari widget
+ipcRenderer.on('set-mini-mode', (_, isMini) => {
+    isMiniMode = isMini;
+});
+
+// Fungsi untuk mensinkronkan data lagu dengan widget
+function syncToMiniPlayer() {
+    ipcRenderer.send('sync-mini-player', {
+        title: songTitleEl.innerText,
+        artist: songArtistEl.innerText,
+        cover: document.getElementById('album-art-img').src,
+        isPlaying: !audio.paused
+    });
+}
+
+// Kirim data saat diminta oleh widget pertama kali
+ipcRenderer.on('request-state-for-mini', syncToMiniPlayer);
 
 // Custom cover
 const uploadCoverBtn = document.getElementById('upload-cover-btn');
@@ -401,8 +428,14 @@ uploadCoverBtn.addEventListener('contextmenu', async (e) => {
     }
 });
 
-audio.addEventListener("play", () => ipcRenderer.send("player-state", true));
-audio.addEventListener("pause", () => ipcRenderer.send("player-state", false));
+audio.addEventListener("play", () => {
+    ipcRenderer.send("player-state", true);
+    syncToMiniPlayer();
+});
+audio.addEventListener("pause", () => {
+    ipcRenderer.send("player-state", false);
+    syncToMiniPlayer();
+});
 
 ipcRenderer.on("thumb-play", () => togglePlay());
 ipcRenderer.on("thumb-next", () => nextSong());

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>NJOY Mini</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body {
+            /* Kunci transparansi dan drag */
+            background: transparent;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .widget-container {
+            /* Efek Glassmorphism (Kaca Buram) */
+            background: rgba(25, 25, 25, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            width: 320px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            /* Bikin seluruh area widget bisa di-drag dengan mouse */
+            -webkit-app-region: drag; 
+        }
+
+        .cover-art {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-info {
+            flex: 1;
+            padding-left: 15px;
+            overflow: hidden;
+        }
+
+        h3 {
+            color: #fff;
+            font-size: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 3px;
+        }
+
+        p {
+            color: #aaa;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            align-items: center;
+            /* Tombol TIDAK BOLEH bisa di-drag, biar bisa diklik */
+            -webkit-app-region: no-drag; 
+        }
+
+        button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover { color: #a855f7; transform: scale(1.1); }
+        #play-btn { font-size: 24px; }
+        
+        .expand-btn {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 14px;
+            color: #888;
+            -webkit-app-region: no-drag;
+        }
+        .expand-btn:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="widget-container">
+        <img id="cover" class="cover-art" src="covers/default.png" alt="Cover">
+        
+        <div class="song-info">
+            <h3 id="title">NJOY Player</h3>
+            <p id="artist">Memuat...</p>
+            
+            <div class="controls">
+                <button id="prev-btn"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="play-btn"><i class="fa-solid fa-play"></i></button>
+                <button id="next-btn"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+        </div>
+
+        <button id="expand-btn" class="expand-btn" title="Kembali ke Layar Utama"><i class="fa-solid fa-expand"></i></button>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        // Menerima data lagu dari Jendela Utama
+        ipcRenderer.on('update-mini-player', (event, data) => {
+            document.getElementById('title').innerText = data.title;
+            document.getElementById('artist').innerText = data.artist;
+            document.getElementById('cover').src = data.cover;
+            
+            const playBtn = document.getElementById('play-btn');
+            if (data.isPlaying) {
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            } else {
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            }
+        });
+
+        // Mengirim perintah klik ke Jendela Utama
+        document.getElementById('play-btn').addEventListener('click', () => ipcRenderer.send('mini-action', 'play'));
+        document.getElementById('next-btn').addEventListener('click', () => ipcRenderer.send('mini-action', 'next'));
+        document.getElementById('prev-btn').addEventListener('click', () => ipcRenderer.send('mini-action', 'prev'));
+        document.getElementById('expand-btn').addEventListener('click', () => ipcRenderer.send('mini-action', 'expand'));
+    </script>
+</body>
+</html>

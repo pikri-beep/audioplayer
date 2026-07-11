@@ -19,17 +19,15 @@ let isQuiting = false;
 let isTrayEnabled = true;
 let notificationWin = null;
 let notificationEnabled = true;
+let miniWin = null;
 
 function updateThumbar(isPlaying) {
-
     win.setThumbarButtons([
         {
             tooltip: "Previous",
-
             icon: nativeImage.createFromPath(
                 path.join(__dirname, "assets/icons/previous.png")
             ),
-
             click() {
                 win.webContents.send("thumb-prev");
             }
@@ -37,7 +35,6 @@ function updateThumbar(isPlaying) {
 
         {
             tooltip: isPlaying ? "Pause" : "Play",
-
             icon: nativeImage.createFromPath(
                 path.join(
                     __dirname,
@@ -46,7 +43,6 @@ function updateThumbar(isPlaying) {
                         : "assets/icons/play.png"
                 )
             ),
-
             click() {
                 win.webContents.send("thumb-play");
             }
@@ -54,11 +50,9 @@ function updateThumbar(isPlaying) {
 
         {
             tooltip: "Next",
-
             icon: nativeImage.createFromPath(
                 path.join(__dirname, "assets/icons/next.png")
             ),
-
             click() {
                 win.webContents.send("thumb-next");
             }
@@ -83,6 +77,63 @@ function createWindow () {
   });
 
   win.loadFile('index.html');
+  ipcMain.on('toggle-mini-player', (event, isMiniMode) => {
+    if (isMiniMode) {
+        win.hide(); // Sembunyikan jendela utama
+        
+        if (!miniWin) {
+            // Buat jendela widget baru yang frameless
+            miniWin = new BrowserWindow({
+                width: 320, 
+                height: 100,
+                frame: false, // Hilangkan bingkai/border Windows
+                transparent: true, // Latar belakang tembus pandang
+                alwaysOnTop: true, // Selalu di atas
+                resizable: false,
+                webPreferences: {
+                    nodeIntegration: true,
+                    contextIsolation: false
+                }
+            });
+            miniWin.loadFile('mini.html');
+            
+            // Hapus dari memori kalau ditutup
+            miniWin.on('closed', () => { miniWin = null; });
+        } else {
+            miniWin.show();
+        }
+        
+        // Minta jendela utama untuk mengirimkan data lagu saat ini ke widget
+        win.webContents.send('request-state-for-mini');
+        
+    } else {
+        if (miniWin) miniWin.hide();
+        win.show(); // Tampilkan jendela utama lagi
+    }
+  });
+
+  // Jembatan komunikasi: Menerima info lagu dari utama -> kirim ke widget
+  ipcMain.on('sync-mini-player', (event, data) => {
+      if (miniWin) {
+          miniWin.webContents.send('update-mini-player', data);
+      }
+  });
+
+  // Jembatan komunikasi: Menerima klik tombol dari widget -> suruh utama eksekusi
+  ipcMain.on('mini-action', (event, action) => {
+      if (action === 'expand') {
+          if (miniWin) miniWin.hide();
+          win.show();
+          win.webContents.send('set-mini-mode', false); // Kembalikan icon compress
+      } else if (action === 'play') {
+          win.webContents.send('thumb-play'); 
+      } else if (action === 'next') {
+          win.webContents.send('thumb-next');
+      } else if (action === 'prev') {
+          win.webContents.send('thumb-prev');
+      }
+  });
+  
 // 1. Kasih tau Electron kalau kita emang beneran niat mau quit
 app.on('before-quit', () => {
     isQuiting = true;
@@ -371,8 +422,8 @@ ipcMain.on("toggle-tray", (_, enabled) => {
     }
 });
 
-// Tambahkan listener ini di bagian bawah main.js bersama ipcMain lainnya
 ipcMain.on("toggle-ontop", (_, enabled) => {
+    isAlwaysOnTopSetting = enabled; // Simpan memori
     if (win) {
         win.setAlwaysOnTop(enabled);
     }
