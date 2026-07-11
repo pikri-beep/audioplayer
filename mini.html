@@ -112,7 +112,7 @@
         [data-theme="marvel"] button { color: #d4af37; }
 
         /* 2. PIXEL ART */
-        [data-theme="pixel"] * { font-family: 'Press Start 2P', monospace !important; }
+        [data-theme="pixel"] h3, [data-theme="pixel"] p { font-family: 'Press Start 2P', monospace !important; }
         [data-theme="pixel"] .widget-container { background: #0000aa; border: 4px solid #fff; border-radius: 0; box-shadow: 4px 4px 0px #000; }
         [data-theme="pixel"] .cover-art { border-radius: 0; border: 2px solid #fff; }
         [data-theme="pixel"] h3 { font-size: 9px; text-shadow: 2px 2px 0px #000; }
@@ -121,7 +121,7 @@
         [data-theme="pixel"] button:hover { color: #aaa; transform: none; }
 
         /* 3. MINECRAFT */
-        [data-theme="minecraft"] * { font-family: 'Press Start 2P', monospace !important; }
+        [data-theme="minecraft"] h3, [data-theme="minecraft"] p { font-family: 'Press Start 2P', monospace !important; }
         [data-theme="minecraft"] .widget-container { background: #866043; border: 4px solid #3b2712; border-top: 8px solid #5fa032; border-radius: 0; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
         [data-theme="minecraft"] .cover-art { border-radius: 0; border: 2px solid #fff; image-rendering: crisp-edges; }
         [data-theme="minecraft"] h3 { font-size: 9px; color: #2e600a; text-shadow: 2px 2px 0px #3b2712; }
@@ -145,9 +145,10 @@
         [data-theme="toystory"] .cover-art { border: 3px solid #223ca9; }
 
         /* 6. HACKER TERMINAL */
-        [data-theme="hacker"] * { font-family: 'Courier New', Courier, monospace !important; }
+        [data-theme="hacker"] h3, [data-theme="hacker"] p, [data-theme="hacker"] button { font-family: 'Courier New', Courier, monospace !important; color: #00ff00; }
+        [data-theme="hacker"] .controls button i { font-family: "Font Awesome 6 Free" !important; font-weight: 900; } /* Mengamankan Icon */
+        [data-theme="hacker"] .expand-btn i { font-family: "Font Awesome 6 Free" !important; font-weight: 900; }
         [data-theme="hacker"] .widget-container { background: rgba(0, 0, 0, 0.95); border: 1px solid #00ff00; border-radius: 0; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
-        [data-theme="hacker"] h3, [data-theme="hacker"] p, [data-theme="hacker"] button { color: #00ff00; }
         [data-theme="hacker"] button:hover { color: #fff; text-shadow: 0 0 5px #00ff00; }
         [data-theme="hacker"] .cover-art { filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); border-radius: 0; border: 1px dashed #00ff00; }
     </style>
