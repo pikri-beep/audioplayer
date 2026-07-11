@@ -125,6 +125,7 @@ function loadSong(index) {
         if (fs.existsSync(specificCover)) {
             document.getElementById('album-art-img').src = `file://${specificCover}?t=${new Date().getTime()}`;
         }
+        if (isMiniMode) syncToMiniPlayer();
     });
 }
 

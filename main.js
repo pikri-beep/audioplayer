@@ -96,7 +96,28 @@ function createWindow () {
                 }
             });
             miniWin.loadFile('mini.html');
-            
+            miniWin.on('moved', () => {
+                const bounds = miniWin.getBounds();
+                const display = screen.getDisplayMatching(bounds);
+                const workArea = display.workArea; // Menghitung layar yang aman (tanpa taskbar)
+
+                let newX = bounds.x;
+                let newY = bounds.y;
+
+                // Cek Kiri - Kanan
+                if (bounds.x < workArea.x) newX = workArea.x;
+                else if (bounds.x + bounds.width > workArea.x + workArea.width) newX = workArea.x + workArea.width - bounds.width;
+
+                // Cek Atas - Bawah Taskbar
+                if (bounds.y < workArea.y) newY = workArea.y;
+                else if (bounds.y + bounds.height > workArea.y + workArea.height) newY = workArea.y + workArea.height - bounds.height;
+
+                // Kalau posisinya melanggar, jepret kembali ke posisi aman
+                if (newX !== bounds.x || newY !== bounds.y) {
+                    miniWin.setPosition(newX, newY);
+                }
+            });
+
             // Hapus dari memori kalau ditutup
             miniWin.on('closed', () => { miniWin = null; });
         } else {
@@ -133,7 +154,7 @@ function createWindow () {
           win.webContents.send('thumb-prev');
       }
   });
-  
+
 // 1. Kasih tau Electron kalau kita emang beneran niat mau quit
 app.on('before-quit', () => {
     isQuiting = true;
