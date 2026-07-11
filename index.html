@@ -54,9 +54,17 @@
         <button id="next-btn" class="btn-main"><i class="fa-solid fa-forward-step"></i></button>
     </div>
 
-    <button id="add-song-btn" class="btn-secondary"><i class="fa-solid fa-plus"></i></button>
-</div>
+    <div class="right-controls" style="display: flex; gap: 10px;">
+        <button id="add-menu-btn" class="btn-secondary" title="Tambah Lagu"><i class="fa-solid fa-plus"></i></button>
+        
+        <!-- Dropdown Menu Tersembunyi -->
+            <div id="add-dropdown" class="add-dropdown-menu">
+                <button id="import-file-btn" class="dropdown-item"><i class="fa-solid fa-folder-open" style="width: 20px;"></i> File Lokal</button>
+                <button id="import-yt-btn" class="dropdown-item"><i class="fa-brands fa-youtube" style="width: 20px;"></i> Dari YouTube</button>
+            </div>
+        </div>
     </div>
+</div>
 
     <div id="playlist-popup" class="playlist-overlay">
         <div class="popup-content">
@@ -116,6 +124,30 @@
             <ul id="playlist-ul"></ul>
         </div>
     </div>
+
+    <!-- YOUTUBE SEARCH & DOWNLOAD POPUP -->
+<div id="yt-popup" class="playlist-overlay">
+    <div class="popup-content" style="max-width: 400px;">
+        <div class="popup-header">
+            <h3>Cari Lagu</h3>
+            <button id="close-yt-btn" class="header-btn">&times;</button>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <input type="text" id="yt-url-input" placeholder="Ketik judul lagu atau artis..." style="flex: 1; padding: 10px;">
+            <button id="start-yt-dl-btn" class="mode-btn active" style="padding: 10px 15px; border-radius: 8px;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+        </div>
+
+        <!-- Teks status (Mencari / Mendownload) -->
+        <div id="yt-status-text" style="text-align: center; font-size: 13px; color: #aaa; margin-bottom: 10px; display: none;"></div>
+
+        <!-- Wadah untuk memunculkan daftar 5 lagu hasil pencarian -->
+        <ul id="yt-search-results" style="list-style: none; max-height: 250px; overflow-y: auto; padding: 0; display: flex; flex-direction: column; gap: 10px;">
+        </ul>
+    </div>
+</div>
 
     <script src="renderer.js"></script>
 </body>

@@ -339,8 +339,30 @@ if (volumeSlider) {
 
 ipcRenderer.on('shortcut-mute', toggleMute);
 
-// Tombol Tambah Lagu
-document.getElementById('add-song-btn').addEventListener('click', async () => {
+// ==========================================
+// LOGIKA DROPDOWN MENU TAMBAH LAGU
+// ==========================================
+const addMenuBtn = document.getElementById('add-menu-btn');
+const addDropdown = document.getElementById('add-dropdown');
+const importFileBtn = document.getElementById('import-file-btn');
+const importYtBtn = document.getElementById('import-yt-btn');
+
+// Buka/Tutup dropdown saat ikon (+) diklik
+addMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Mencegah event tumpah ruah
+    addDropdown.classList.toggle('show');
+});
+
+// Tutup dropdown otomatis kalau kita ngeklik area kosong di layar
+document.addEventListener('click', () => {
+    if (addDropdown.classList.contains('show')) {
+        addDropdown.classList.remove('show');
+    }
+});
+
+// 1. Tombol Tambah File Lokal
+importFileBtn.addEventListener('click', async () => {
+    addDropdown.classList.remove('show'); // Tutup menu
     const filePaths = await ipcRenderer.invoke('open-file-dialog');
     if (filePaths && filePaths.length > 0) {
         filePaths.forEach(filePath => {
@@ -351,6 +373,13 @@ document.getElementById('add-song-btn').addEventListener('click', async () => {
         });
         loadPlaylist();
     }
+});
+
+// 2. Tombol Import YouTube
+importYtBtn.addEventListener('click', () => {
+    addDropdown.classList.remove('show'); // Tutup menu
+    const ytPopup = document.getElementById('yt-popup');
+    if(ytPopup) ytPopup.classList.add('show');
 });
 
 const popup = document.getElementById('playlist-popup');
@@ -515,5 +544,87 @@ if (searchBar && playlistUl) {
         });
     });
 }
+
+/* =================================================================
+   UI YOUTUBE SEARCH & DOWNLOADER
+================================================================= */
+const ytPopup = document.getElementById('yt-popup');
+const closeYtBtn = document.getElementById('close-yt-btn');
+const startYtDlBtn = document.getElementById('start-yt-dl-btn');
+const ytStatusText = document.getElementById('yt-status-text');
+const ytUrlInput = document.getElementById('yt-url-input');
+const ytSearchResults = document.getElementById('yt-search-results');
+
+closeYtBtn.addEventListener('click', () => {
+    ytPopup.classList.remove('show');
+    ytStatusText.style.display = 'none';
+    ytSearchResults.innerHTML = '';
+    ytUrlInput.value = '';
+});
+
+// 1. PROSES MENCARI LAGU
+startYtDlBtn.addEventListener('click', async () => {
+    const query = ytUrlInput.value.trim();
+    if (!query) { alert("Ketik judul lagunya dulu bang!"); return; }
+
+    ytSearchResults.innerHTML = '';
+    ytStatusText.style.display = 'block';
+    ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mencari di YouTube...';
+
+    // Minta main.js untuk mencari
+    const results = await ipcRenderer.invoke('search-yt', query);
+    
+    ytStatusText.style.display = 'none';
+
+    if (results.length === 0) {
+        ytStatusText.style.display = 'block';
+        ytStatusText.innerHTML = 'Lagu tidak ditemukan!';
+        return;
+    }
+
+    // 2. TAMPILKAN HASILNYA SEBAGAI DAFTAR KLIK
+    results.forEach(video => {
+        const li = document.createElement('li');
+        // Desain Kartu List Lagu (Bisa ikut menyesuaikan tema)
+        li.style.cssText = `display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;`;
+        
+        li.innerHTML = `
+            <img src="${video.thumbnail}" style="width: 60px; height: 45px; object-fit: cover; border-radius: 5px;">
+            <div style="flex: 1; overflow: hidden;">
+                <div style="font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${video.title}</div>
+                <div style="font-size: 10px; color: #aaa;">${video.author} • ${video.timestamp}</div>
+            </div>
+            <i class="fa-solid fa-download" style="color: #aaa; margin-right: 5px;"></i>
+        `;
+
+        // Efek Hover pakai event listener JS biar simple
+        li.addEventListener('mouseenter', () => li.style.background = 'rgba(255,255,255,0.1)');
+        li.addEventListener('mouseleave', () => li.style.background = 'rgba(255,255,255,0.05)');
+
+        // 3. JIKA SALAH SATU LAGU DIKLIK -> DOWNLOAD!
+        li.addEventListener('click', async () => {
+            ytSearchResults.innerHTML = ''; // Kosongkan daftar
+            ytStatusText.style.display = 'block';
+            ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>... (Tunggu ya!)`;
+
+            // Mulai Download lewat main.js
+            const result = await ipcRenderer.invoke('download-yt', video.url);
+
+            if (result.success) {
+                ytStatusText.innerHTML = '<i class="fa-solid fa-check" style="color: #00ff00;"></i> Berhasil! Dimasukkan ke playlist...';
+                setTimeout(() => {
+                    ytPopup.classList.remove('show');
+                    ytStatusText.style.display = 'none';
+                    ytUrlInput.value = '';
+                    loadPlaylist(); // Refresh NJOY!
+                }, 2000);
+            } else {
+                ytStatusText.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Gagal! Cek koneksi atau yt-dlp.';
+            }
+        });
+
+        ytSearchResults.appendChild(li);
+    });
+});
 
 loadPlaylist();

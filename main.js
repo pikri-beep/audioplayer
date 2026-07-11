@@ -364,6 +364,52 @@ ipcMain.handle('remove-custom-cover', async (event, songName) => {
     return false;
 });
 
+// =========================================================
+// MESIN YOUTUBE SEARCH & DOWNLOAD (SUDAH DIRAPIKAN - JANGAN ADA DUPLIKAT)
+// =========================================================
+const ytSearch = require('yt-search');
+const { exec } = require('child_process');
+
+// 1. Fungsi Pencarian YouTube
+ipcMain.handle('search-yt', async (event, query) => {
+    try {
+        const r = await ytSearch(query);
+        const videos = r.videos.slice(0, 5); // Ambil 5 hasil teratas saja
+        
+        return videos.map(v => ({
+            title: v.title,
+            author: v.author.name,
+            timestamp: v.timestamp,
+            thumbnail: v.thumbnail,
+            url: v.url
+        }));
+    } catch (err) {
+        console.error("Error pencarian:", err);
+        return [];
+    }
+});
+
+// 2. Fungsi Download YT-DLP
+ipcMain.handle('download-yt', async (event, url) => {
+    return new Promise((resolve, reject) => {
+        // Pola output: Simpan di folder "songs" dengan nama "JudulLagu.mp3"
+        const outputTemplate = path.join(__dirname, 'songs', '%(title)s.%(ext)s');
+        
+        // Perintah sakti yt-dlp
+        const command = `yt-dlp -x --audio-format mp3 --embed-metadata --embed-thumbnail -o "${outputTemplate}" "${url}"`;
+
+        // Jalankan perintah diam-diam di background
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Gagal download: ${error.message}`);
+                resolve({ success: false, error: error.message });
+                return;
+            }
+            resolve({ success: true });
+        });
+    });
+});
+
 ipcMain.on("player-state", (_, playing) => {
     updateThumbar(playing);
 });

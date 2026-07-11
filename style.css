@@ -1084,6 +1084,100 @@ body {
 [data-theme="hacker"] .switch input:checked + .slider { background: #00ff00; }
 [data-theme="hacker"] .switch input:checked + .slider::before { background: #000; }
 
+/* =================================================================
+   STYLING UNTUK INPUT YOUTUBE AGAR MENGIKUTI TEMA
+================================================================= */
+#yt-url-input {
+    border-radius: 5px;
+    border: 1px solid #333;
+    background: #282828;
+    color: #fff;
+    outline: none;
+}
+[data-theme="marvel"] #yt-url-input { background: #2a0000; color: #d4af37; border: 1px solid #d4af37; }
+[data-theme="pixel"] #yt-url-input { background: #000; color: #fff; border: 2px solid #fff; border-radius: 0; font-family: 'Press Start 2P', monospace; font-size: 9px; }
+[data-theme="minecraft"] #yt-url-input { background: #c6c6c6; color: #111; border: 3px solid #3e3e3e; border-top-color: #111; border-left-color: #111; border-radius: 0; font-family: 'Press Start 2P', monospace; font-size: 9px; }
+[data-theme="spiderman"] #yt-url-input { background: #1a1a1a; color: #fff; border: 2px solid #043673; border-radius: 8px; }
+[data-theme="spiderman"] #yt-url-input:focus { border-color: #df1f2d; }
+[data-theme="toystory"] #yt-url-input { background: #f0f0f0; color: #223ca9; border: 3px solid #223ca9; border-radius: 12px; font-weight: bold; }
+[data-theme="hacker"] #yt-url-input { background: #000; color: #00ff00; border: 1px dashed #00ff00; border-radius: 0; font-family: 'Courier New', monospace; }
+
+/* =================================================================
+   DROPDOWN TAMBAH LAGU
+================================================================= */
+
+.right-controls {
+    position: relative;
+}
+
+.add-dropdown-menu {
+    position: absolute;
+    bottom: 140%;
+    right: -10px;
+    background: #282828;
+    border: 1px solid var(--theme-border);
+    border-radius: 12px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(15px) scale(0.95);
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    white-space: nowrap;
+    z-index: 100;
+}
+.add-dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+.dropdown-item {
+    background: none;
+    border: none;
+    color: #aaa;
+    padding: 10px 15px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* Penyesuaian Tema untuk Dropdown */
+[data-theme="marvel"] .add-dropdown-menu { background: #1a0000; border-color: #d4af37; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
+[data-theme="marvel"] .dropdown-item { color: #d4af37; }
+[data-theme="marvel"] .dropdown-item:hover { background: #4a0000; color: #fff; }
+
+[data-theme="pixel"] .add-dropdown-menu { background: #0000aa; border: 4px solid #fff; border-radius: 0; box-shadow: 4px 4px 0px #000; }
+[data-theme="pixel"] .dropdown-item { color: #fff; font-family: 'Press Start 2P', monospace; font-size: 8px; border-radius: 0; }
+[data-theme="pixel"] .dropdown-item:hover { background: #000; }
+
+[data-theme="minecraft"] .add-dropdown-menu { background: #866043; border: 4px solid #3b2712; border-radius: 0; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
+[data-theme="minecraft"] .dropdown-item { color: #fff; font-family: 'Press Start 2P', monospace; font-size: 8px; border-radius: 0; text-shadow: 2px 2px 0px #3b2712; }
+[data-theme="minecraft"] .dropdown-item:hover { background: #5fa032; }
+
+[data-theme="spiderman"] .add-dropdown-menu { background: #111; border: 2px solid #df1f2d; border-radius: 10px; box-shadow: 0 0 15px rgba(4, 54, 115, 0.8); }
+[data-theme="spiderman"] .dropdown-item { color: #fff; }
+[data-theme="spiderman"] .dropdown-item:hover { background: #df1f2d; color: #fff; }
+
+[data-theme="toystory"] .add-dropdown-menu { background: #fff; border: 3px solid #ff0000; border-radius: 12px; box-shadow: 4px 4px 0px #223ca9; }
+[data-theme="toystory"] .dropdown-item { color: #223ca9; font-weight: bold; }
+[data-theme="toystory"] .dropdown-item:hover { background: #f0f0f0; color: #ff0000; }
+
+[data-theme="hacker"] .add-dropdown-menu { background: #000; border: 1px dashed #00ff00; border-radius: 0; }
+[data-theme="hacker"] .dropdown-item { color: #00ff00; font-family: 'Courier New', monospace; border-radius: 0; }
+[data-theme="hacker"] .dropdown-item:hover { background: rgba(0, 255, 0, 0.2); }
+
 /* Mengatur layout saat lebar jendela dikecilkan */
 @media (max-width: 350px) {
     .player-container {
