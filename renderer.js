@@ -125,6 +125,7 @@ function loadSong(index) {
         if (fs.existsSync(specificCover)) {
             document.getElementById('album-art-img').src = `file://${specificCover}?t=${new Date().getTime()}`;
         }
+        if (isMiniMode) syncToMiniPlayer();
     });
 }
 
@@ -399,7 +400,8 @@ function syncToMiniPlayer() {
         title: songTitleEl.innerText,
         artist: songArtistEl.innerText,
         cover: document.getElementById('album-art-img').src,
-        isPlaying: !audio.paused
+        isPlaying: !audio.paused,
+        theme: document.body.getAttribute('data-theme') || 'default'
     });
 }
 
