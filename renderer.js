@@ -497,6 +497,7 @@ if (themeSelector) {
         const selectedTheme = e.target.value;
         document.body.setAttribute('data-theme', selectedTheme);
         localStorage.setItem('njoy_theme', selectedTheme);
+        syncToMiniPlayer();
     });
 }
 

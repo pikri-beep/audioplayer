@@ -5,8 +5,10 @@ songs/*.wav
 songs/*.ogg
 songs/*.m4a
 
-covers/custom-cover.jpg
-covers/default.png
+covers/*
+
+!covers/default.png
+!covers/.gitkeep
 
 dist/
 out/
