@@ -562,69 +562,72 @@ closeYtBtn.addEventListener('click', () => {
     ytUrlInput.value = '';
 });
 
-// 1. PROSES MENCARI LAGU
+// Fungsi Bantuan untuk Sukses/Gagal Download
+function handleDownloadResult(result) {
+    if (result.success) {
+        ytStatusText.innerHTML = '<i class="fa-solid fa-check" style="color: #00ff00;"></i> Berhasil! Menambahkan ke playlist...';
+        setTimeout(() => {
+            ytPopup.classList.remove('show');
+            ytStatusText.style.display = 'none';
+            ytUrlInput.value = '';
+            loadPlaylist();
+        }, 2000);
+    } else {
+        ytStatusText.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Gagal! Cek koneksi internet/terminal.';
+    }
+}
+
 startYtDlBtn.addEventListener('click', async () => {
     const query = ytUrlInput.value.trim();
-    if (!query) { alert("Ketik judul lagunya dulu bang!"); return; }
+    if (!query) return alert("Ketik judul lagu atau paste link bang!");
 
     ytSearchResults.innerHTML = '';
     ytStatusText.style.display = 'block';
-    ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mencari di YouTube...';
 
-    // Minta main.js untuk mencari
-    const results = await ipcRenderer.invoke('search-yt', query);
-    
-    ytStatusText.style.display = 'none';
+    // SANG DETEKTIF: Mengecek apakah ini link Spotify atau YouTube
+    const isSpotify = /open\.spotify\.com/i.test(query);
+    const isYouTube = /(youtube\.com|youtu\.be)/i.test(query);
 
-    if (results.length === 0) {
-        ytStatusText.style.display = 'block';
-        ytStatusText.innerHTML = 'Lagu tidak ditemukan!';
-        return;
-    }
+    if (isSpotify) {
+        // JALUR 1: LINK SPOTIFY (Playlist / Album / Track)
+        ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mengekstraksi dari Spotify... (Bisa agak lama, sabar ya!)';
+        const result = await ipcRenderer.invoke('download-spotify', query);
+        handleDownloadResult(result);
 
-    // 2. TAMPILKAN HASILNYA SEBAGAI DAFTAR KLIK
-    results.forEach(video => {
-        const li = document.createElement('li');
-        // Desain Kartu List Lagu (Bisa ikut menyesuaikan tema)
-        li.style.cssText = `display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; transition: 0.2s;`;
-        
-        li.innerHTML = `
-            <img src="${video.thumbnail}" style="width: 60px; height: 45px; object-fit: cover; border-radius: 5px;">
-            <div style="flex: 1; overflow: hidden;">
-                <div style="font-size: 12px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${video.title}</div>
-                <div style="font-size: 10px; color: #aaa;">${video.author} • ${video.timestamp}</div>
-            </div>
-            <i class="fa-solid fa-download" style="color: #aaa; margin-right: 5px;"></i>
-        `;
+    } else if (isYouTube) {
+        // JALUR 2: LINK YOUTUBE (Video / Playlist)
+        ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload dari YouTube...';
+        const result = await ipcRenderer.invoke('download-yt', query);
+        handleDownloadResult(result);
 
-        // Efek Hover pakai event listener JS biar simple
-        li.addEventListener('mouseenter', () => li.style.background = 'rgba(255,255,255,0.1)');
-        li.addEventListener('mouseleave', () => li.style.background = 'rgba(255,255,255,0.05)');
+    } else {
+        // JALUR 3: TEKS BIASA -> PENCARIAN
+        ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mencari...';
+        const results = await ipcRenderer.invoke('search-yt', query);
+        ytStatusText.style.display = 'none';
 
-        // 3. JIKA SALAH SATU LAGU DIKLIK -> DOWNLOAD!
-        li.addEventListener('click', async () => {
-            ytSearchResults.innerHTML = ''; // Kosongkan daftar
+        if (results.length === 0) {
             ytStatusText.style.display = 'block';
-            ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>... (Tunggu ya!)`;
+            ytStatusText.innerHTML = 'Lagu tidak ditemukan!';
+            return;
+        }
 
-            // Mulai Download lewat main.js
-            const result = await ipcRenderer.invoke('download-yt', video.url);
-
-            if (result.success) {
-                ytStatusText.innerHTML = '<i class="fa-solid fa-check" style="color: #00ff00;"></i> Berhasil! Dimasukkan ke playlist...';
-                setTimeout(() => {
-                    ytPopup.classList.remove('show');
-                    ytStatusText.style.display = 'none';
-                    ytUrlInput.value = '';
-                    loadPlaylist(); // Refresh NJOY!
-                }, 2000);
-            } else {
-                ytStatusText.innerHTML = '<i class="fa-solid fa-triangle-exclamation" style="color: red;"></i> Gagal! Cek koneksi atau yt-dlp.';
-            }
+        results.forEach(video => {
+            const li = document.createElement('li');
+            li.style.cssText = `display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; cursor: pointer; margin-bottom: 5px;`;
+            li.innerHTML = `<img src="${video.thumbnail}" style="width: 50px; border-radius: 4px;"> <span>${video.title}</span>`;
+            
+            li.addEventListener('click', async () => {
+                ytSearchResults.innerHTML = '';
+                ytStatusText.style.display = 'block';
+                ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>...`;
+                
+                const result = await ipcRenderer.invoke('download-yt', video.url);
+                handleDownloadResult(result);
+            });
+            ytSearchResults.appendChild(li);
         });
-
-        ytSearchResults.appendChild(li);
-    });
+    }
 });
 
 loadPlaylist();

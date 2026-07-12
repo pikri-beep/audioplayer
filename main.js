@@ -410,6 +410,28 @@ ipcMain.handle('download-yt', async (event, url) => {
     });
 });
 
+// =========================================================
+// MESIN SPOTIFY DOWNLOADER (SPOTDL)
+// =========================================================
+ipcMain.handle('download-spotify', async (event, url) => {
+    return new Promise((resolve, reject) => {
+        // spotdl menggunakan format {title} bukan %(title)s
+        const outputTemplate = path.join(__dirname, 'songs', '{title}.{ext}');
+        
+        // Perintah sakti spotdl (Otomatis mendownload cover HD dan lirik)
+        const command = `python -m spotdl download "${url}" --format mp3 --output "${outputTemplate}"`;
+
+        exec(command, { maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Gagal spotdl: ${error.message}`);
+                resolve({ success: false, error: error.message });
+                return;
+            }
+            resolve({ success: true });
+        });
+    });
+});
+
 ipcMain.on("player-state", (_, playing) => {
     updateThumbar(playing);
 });

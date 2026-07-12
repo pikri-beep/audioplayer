@@ -2,6 +2,15 @@
 
 NJOY Music Player adalah aplikasi pemutar musik desktop modern yang dibangun menggunakan **Electron.js**, HTML, CSS, dan JavaScript. Aplikasi ini dirancang dengan antarmuka yang sangat *customizable*, ringan, dan dilengkapi dengan berbagai tema visual dinamis yang mengubah seluruh tampilan UI (termasuk *progress bar*, *scrollbar*, dan pop-up).
 
+## ⚠️ SYARAT WAJIB SEBELUM INSTALL!
+Karena aplikasi ini menggunakan mesin downloader kelas berat, komputer kamu **WAJIB** terinstall:
+1. **Python** (Pastikan 'Add to PATH' dicentang saat install)
+2. **FFmpeg**
+3. Buka CMD/Terminal lalu ketik perintah ini untuk menginstall mesinnya:
+   `pip install spotdl`
+   `spotdl --download-ffmpeg`
+   `pip install yt-dlp`
+
 ## ✨ Fitur Utama
 
 - **Custom Themes Engine:** Ubah tampilan aplikasi secara *real-time* tanpa *restart*. Tema yang tersedia:
@@ -19,6 +28,8 @@ NJOY Music Player adalah aplikasi pemutar musik desktop modern yang dibangun men
   - `Ctrl + Up/Down`: Volume Up / Down
   - `Ctrl + M` : Mute / Unmute
 - **Mode Fleksibel:** Mendukung mode *Always on Top* dan berjalan di latar belakang (System Tray).
+- **Mini Player** 
+- **Search Lagu & Download via yt-dlp**
 
 ---
 
@@ -27,6 +38,8 @@ Aplikasi ini memutar file musik berformat `.mp3` secara lokal.
 Jika kamu ingin mencari dan mendownload lagu-lagu favoritmu (misalnya dari Spotify) untuk diputar di aplikasi ini, kamu bisa menggunakan layanan gratis berikut:
 
 👉 **[Download MP3 via Spotidown](https://spotidown.co/en6)**
+
+  **BARU DAPAT DOWNLOAD LAGU DARI APLIKASI MENGGUNAAN YTDLP & SPOTDLP**
 
 *(Catatan: Pastikan file lagu berformat `.mp3` dan letakkan di dalam folder `songs` atau buka secara manual dari dalam aplikasi).*
 
