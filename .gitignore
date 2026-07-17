@@ -4,6 +4,7 @@ songs/*.mp3
 songs/*.wav
 songs/*.ogg
 songs/*.m4a
+songs/*.webp
 
 covers/*
 
