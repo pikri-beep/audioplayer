@@ -12,6 +12,7 @@ const {
 
 const path = require('path');
 const fs = require('fs');
+const ytSearch = require('yt-search');
 
 let win;
 let tray;
@@ -20,6 +21,8 @@ let isTrayEnabled = true;
 let notificationWin = null;
 let notificationEnabled = true;
 let miniWin = null;
+
+
 
 function updateThumbar(isPlaying) {
     win.setThumbarButtons([
@@ -253,7 +256,19 @@ app.whenReady().then(() => {
     // Pakai icon default Electron dulu
     const icon = nativeImage.createFromPath(
     path.join(__dirname, "assets", "logo.png")
-    );
+    );  
+    
+    function checkSystemRequirements() {
+    exec('python --version', (error) => {
+        if (error) {
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'NJOY Error',
+                message: 'Waduh! NJOY butuh Python & SpotDL.\n\nSilakan install Python (tambahkan ke PATH) & ketik "pip install spotdl" di terminal dulu ya bang!',
+            });
+        }
+    });
+}
 
     globalShortcut.register('CommandOrControl+Shift+Space', () => {
     win.webContents.send("thumb-play");});
@@ -341,7 +356,7 @@ ipcMain.handle('get-metadata', async (event, filePath) => {
 ipcMain.handle('upload-custom-cover', async (event, songName) => {
     const result = await dialog.showOpenDialog({
         properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg'] }]
+        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'gif'] }]
     });
     
     if (!result.canceled) {
@@ -365,40 +380,57 @@ ipcMain.handle('remove-custom-cover', async (event, songName) => {
 });
 
 // =========================================================
-// MESIN YOUTUBE SEARCH & DOWNLOAD (SUDAH DIRAPIKAN - JANGAN ADA DUPLIKAT)
+// MESIN YOUTUBE SEARCH & DOWNLOAD
 // =========================================================
-const ytSearch = require('yt-search');
 const { exec } = require('child_process');
 
-// 1. Fungsi Pencarian YouTube
+// 1. Fungsi Pencarian YouTube (Versi Anti-Crash & Super Safe)
 ipcMain.handle('search-yt', async (event, query) => {
     try {
-        const r = await ytSearch(query);
-        const videos = r.videos.slice(0, 5); // Ambil 5 hasil teratas saja
+        console.log(`\n🔍 [NJOY Search] Mencari di YouTube untuk: "${query}"`);
         
-        return videos.map(v => ({
-            title: v.title,
-            author: v.author.name,
-            timestamp: v.timestamp,
-            thumbnail: v.thumbnail,
-            url: v.url
-        }));
+        // Menggunakan pemanggilan tipe objek (paling aman untuk library yt-search terbaru)
+        const r = await ytSearch({ query: query });
+        
+        if (!r || !r.videos || r.videos.length === 0) {
+            console.warn("⚠️ [NJOY Search] Hasil pencarian kosong dari YouTube.");
+            return [];
+        }
+
+        // Batasi hanya mengambil 5 hasil teratas
+        const videos = r.videos.slice(0, 5); 
+        
+        // Mapping dengan pertahanan penuh (Defensive Programming)
+        return videos.map(v => {
+            // YouTube sering mengubah penamaan thumbnail, kita amankan dengan fallback
+            const thumbnailSrc = v.image || v.thumbnail || "assets/logo.png";
+            
+            // Cegah error TypeError: Cannot read properties of undefined (reading 'name')
+            const channelName = (v.author && v.author.name) ? v.author.name : "Unknown Channel";
+            
+            return {
+                title: v.title || "Untitled Video",
+                author: channelName,
+                timestamp: v.timestamp || "0:00",
+                thumbnail: thumbnailSrc,
+                url: v.url || ""
+            };
+        });
     } catch (err) {
-        console.error("Error pencarian:", err);
+        // Tampilkan error mendetail di terminal VS Code biar mudah kita diagnosa jika ada masalah jaringan
+        console.error("❌ [NJOY Search Error] Gagal melakukan pencarian:", err.message);
         return [];
     }
 });
 
+
 // 2. Fungsi Download YT-DLP
 ipcMain.handle('download-yt', async (event, url) => {
     return new Promise((resolve, reject) => {
-        // Pola output: Simpan di folder "songs" dengan nama "JudulLagu.mp3"
-        const outputTemplate = path.join(__dirname, 'songs', '%(title)s.%(ext)s');
-        
-        // Perintah sakti yt-dlp
+        // BUG FIX: Tambahkan uploader (Artis) di nama file agar unik!
+        const outputTemplate = path.join(__dirname, 'songs', '%(uploader)s - %(title)s.%(ext)s');
         const command = `yt-dlp -x --audio-format mp3 --embed-metadata --embed-thumbnail -o "${outputTemplate}" "${url}"`;
 
-        // Jalankan perintah diam-diam di background
         exec(command, (error, stdout, stderr) => {
             if (error) {
                 console.error(`Gagal download: ${error.message}`);
@@ -415,10 +447,8 @@ ipcMain.handle('download-yt', async (event, url) => {
 // =========================================================
 ipcMain.handle('download-spotify', async (event, url) => {
     return new Promise((resolve, reject) => {
-        // spotdl menggunakan format {title} bukan %(title)s
-        const outputTemplate = path.join(__dirname, 'songs', '{title}.{ext}');
-        
-        // Perintah sakti spotdl (Otomatis mendownload cover HD dan lirik)
+        // BUG FIX: Tambahkan {artist} di nama file agar unik!
+        const outputTemplate = path.join(__dirname, 'songs', '{artist} - {title}.{ext}');
         const command = `python -m spotdl download "${url}" --format mp3 --output "${outputTemplate}"`;
 
         exec(command, { maxBuffer: 1024 * 1024 * 50 }, (error, stdout, stderr) => {

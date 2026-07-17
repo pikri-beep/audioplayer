@@ -34,6 +34,7 @@
 
         <div class="extra-controls">
             <button id="shuffle-btn" class="sub-control-btn"><i class="fa-solid fa-shuffle"></i></button>
+            <button id="repeat-btn" class="sub-control-btn"><i class="fa-solid fa-repeat"></i></button>
             <div class="volume-container" >
                 <i id="volume-icon" class="fa-solid fa-volume-high"></i>
                 <div class="volume-pop-container">
@@ -41,8 +42,8 @@
                     <span id="volume-text">70%</span>
                 </div>
             </div>
-            <button id="repeat-btn" class="sub-control-btn"><i class="fa-solid fa-repeat"></i></button>
             <button id="mini-player-btn" class="sub-control-btn" title="Mini Player Mode"><i class="fa-solid fa-compress"></i></button>
+            <button id="lyrics-toggle-btn" class="sub-control-btn" title="Lirik Karaoke"><i class="fa-solid fa-microphone"></i></button>
         </div>
 
         <div class="controls">
@@ -148,6 +149,21 @@
         </ul>
     </div>
 </div>
+
+<!-- POPUP LIRIK KARAOKE -->
+<div id="lyrics-popup" class="playlist-overlay">
+    <div class="popup-content" style="max-width: 500px; height: 70vh; display: flex; flex-direction: column;">
+        <div class="popup-header">
+            <h3><i class="fa-solid fa-music"></i> Lirik Berjalan</h3>
+            <button id="close-lyrics-btn" class="header-btn">&times;</button>
+        </div>
+
+        <div id="lyrics-content" style="flex: 1; overflow-y: auto; padding: 20px 10px; text-align: center; scroll-behavior: smooth;">
+            <p class="lyric-placeholder" style="color: #aaa; margin-top: 50px;">Memuat lirik...</p>
+        </div>
+    </div>
+</div>
+
 
     <script src="renderer.js"></script>
 </body>

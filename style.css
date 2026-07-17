@@ -1103,6 +1103,38 @@ body {
 [data-theme="hacker"] #yt-url-input { background: #000; color: #00ff00; border: 1px dashed #00ff00; border-radius: 0; font-family: 'Courier New', monospace; }
 
 /* =================================================================
+   FITUR LIRIK KARAOKE
+================================================================= */
+.lyric-line {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 15px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.lyric-line:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.lyric-line.active {
+    color: #fff;
+    font-size: 22px;
+    text-shadow: 0 0 10px var(--theme-glow, #a855f7);
+    transform: scale(1.05);
+}
+
+/* Sembunyikan scrollbar bawaan agar lirik terlihat elegan */
+#lyrics-content::-webkit-scrollbar {
+    width: 5px;
+}
+#lyrics-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+/* =================================================================
    DROPDOWN TAMBAH LAGU
 ================================================================= */
 
@@ -1177,6 +1209,32 @@ body {
 [data-theme="hacker"] .add-dropdown-menu { background: #000; border: 1px dashed #00ff00; border-radius: 0; }
 [data-theme="hacker"] .dropdown-item { color: #00ff00; font-family: 'Courier New', monospace; border-radius: 0; }
 [data-theme="hacker"] .dropdown-item:hover { background: rgba(0, 255, 0, 0.2); }
+
+/* =================================================================
+   TEMA LIRIK KARAOKE MENYESUAIKAN APLIKASI
+================================================================= */
+/* 1. MARVEL */
+[data-theme="marvel"] .lyric-line { font-family: 'Bangers', sans-serif; letter-spacing: 1px; font-weight: normal; }
+[data-theme="marvel"] .lyric-line.active { color: #d4af37; text-shadow: 0 0 10px #df1f2d; transform: scale(1.1); }
+
+/* 2. PIXEL ART */
+[data-theme="pixel"] .lyric-line { font-family: 'Press Start 2P', monospace; font-size: 10px; line-height: 2; }
+[data-theme="pixel"] .lyric-line.active { color: #fff; text-shadow: 2px 2px 0px #000; font-size: 12px; }
+
+/* 3. MINECRAFT */
+[data-theme="minecraft"] .lyric-line { font-family: 'Press Start 2P', monospace; font-size: 10px; line-height: 2; }
+[data-theme="minecraft"] .lyric-line.active { color: #5fa032; text-shadow: 2px 2px 0px #3b2712; font-size: 12px; }
+
+/* 4. SPIDERMAN */
+[data-theme="spiderman"] .lyric-line.active { color: #df1f2d; text-shadow: 0 0 10px #043673; transform: scale(1.1) skewY(-2deg); }
+
+/* 5. TOY STORY */
+[data-theme="toystory"] .lyric-line { font-family: 'Chewy', cursive; font-size: 20px; }
+[data-theme="toystory"] .lyric-line.active { color: #fff000; -webkit-text-stroke: 1px #ff0000; text-shadow: 2px 2px 0px #223ca9; font-size: 28px; }
+
+/* 6. HACKER TERMINAL */
+[data-theme="hacker"] .lyric-line { font-family: 'Courier New', monospace; color: rgba(0, 255, 0, 0.4); }
+[data-theme="hacker"] .lyric-line.active { color: #00ff00; text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); }
 
 /* Mengatur layout saat lebar jendela dikecilkan */
 @media (max-width: 350px) {
