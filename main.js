@@ -279,38 +279,6 @@ app.whenReady().then(() => {
     globalShortcut.register('CommandOrControl+M', () => { if (win) win.webContents.send('shortcut-mute'); });
 
 
-tray = new Tray(icon);
-
-    tray.setToolTip("Audio Player");
-
-    tray.setContextMenu(
-        Menu.buildFromTemplate([
-            {
-                label: "🎵 Buka Player",
-                click() {
-                    win.show();
-                }
-            },
-            {
-                type: "separator"
-            },
-            {
-                label: "❌ Keluar",
-                click() {
-                    isQuiting = true;
-                    app.quit();
-                }
-            }
-        ])
-    );
-
-    tray.on("click", () => {
-        if (win.isVisible()) {
-            win.hide();
-        } else {
-            win.show();
-        }
-    });
 
 });
 

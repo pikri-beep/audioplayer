@@ -437,6 +437,10 @@ if (searchBar && playlistUl) {
 
 const themeSelector = document.getElementById('theme-selector');
 if (themeSelector) {
+    const savedTheme = localStorage.getItem('njoy_theme') || 'default';
+    themeSelector.value = savedTheme;
+    document.body.setAttribute('data-theme', savedTheme);
+
     themeSelector.addEventListener('change', (e) => {
         const selectedTheme = e.target.value;
         document.body.setAttribute('data-theme', selectedTheme);
@@ -540,6 +544,50 @@ if (uploadCoverBtn) {
 ipcRenderer.on("thumb-play", () => togglePlay());
 ipcRenderer.on("thumb-next", () => nextSong());
 ipcRenderer.on("thumb-prev", () => prevSong());
+
+// 10. LOGIKA SETTINGS (TRAY, NOTIFICATION, ALWAYS ON TOP)
+const trayToggle = document.getElementById('tray-toggle');
+const notificationToggle = document.getElementById('notification-toggle');
+const ontopToggle = document.getElementById('ontop-toggle');
+
+// Load & Terapkan System Tray
+const savedTray = localStorage.getItem('njoy_tray');
+const trayEnabled = savedTray !== null ? savedTray === 'true' : true;
+if (trayToggle) {
+    trayToggle.checked = trayEnabled;
+    ipcRenderer.send('toggle-tray', trayEnabled);
+    trayToggle.addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        localStorage.setItem('njoy_tray', enabled);
+        ipcRenderer.send('toggle-tray', enabled);
+    });
+}
+
+// Load & Terapkan Now Playing Notification
+const savedNotification = localStorage.getItem('njoy_notification');
+const notificationEnabledSetting = savedNotification !== null ? savedNotification === 'true' : true;
+if (notificationToggle) {
+    notificationToggle.checked = notificationEnabledSetting;
+    ipcRenderer.send('toggle-notification', notificationEnabledSetting);
+    notificationToggle.addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        localStorage.setItem('njoy_notification', enabled);
+        ipcRenderer.send('toggle-notification', enabled);
+    });
+}
+
+// Load & Terapkan Always On Top
+const savedOntop = localStorage.getItem('njoy_ontop');
+const ontopEnabled = savedOntop !== null ? savedOntop === 'true' : false;
+if (ontopToggle) {
+    ontopToggle.checked = ontopEnabled;
+    ipcRenderer.send('toggle-ontop', ontopEnabled);
+    ontopToggle.addEventListener('change', (e) => {
+        const enabled = e.target.checked;
+        localStorage.setItem('njoy_ontop', enabled);
+        ipcRenderer.send('toggle-ontop', enabled);
+    });
+}
 
 // Inisialisasi awal
 loadPlaylist();
