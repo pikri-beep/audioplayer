@@ -361,26 +361,6 @@ app.whenReady().then(() => {
             safeSend(win, 'shortcut-mute');
         }
     });
-    globalShortcut.register('VolumeUp', () => {
-        if (win && !win.isDestroyed()) {
-            safeSend(win, 'shortcut-volume-up');
-        }
-    });
-    globalShortcut.register('CommandOrControl+Up', () => {
-        if (win && !win.isDestroyed()) {
-            safeSend(win, 'shortcut-volume-up');
-        }
-    });
-    globalShortcut.register('VolumeDown', () => {
-        if (win && !win.isDestroyed()) {
-            safeSend(win, 'shortcut-volume-down');
-        }
-    });
-    globalShortcut.register('CommandOrControl+Down', () => {
-        if (win && !win.isDestroyed()) {
-            safeSend(win, 'shortcut-volume-down');
-        }
-    });
 
 
 
