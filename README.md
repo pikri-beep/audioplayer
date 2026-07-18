@@ -1,92 +1,103 @@
 # 🎵 NJOY Music Player
 
-NJOY Music Player adalah aplikasi pemutar musik desktop modern yang dibangun menggunakan **Electron.js**, HTML, CSS, dan JavaScript. Aplikasi ini dirancang dengan antarmuka yang sangat *customizable*, ringan, dan dilengkapi dengan berbagai tema visual dinamis yang mengubah seluruh tampilan UI (termasuk *progress bar*, *scrollbar*, dan pop-up).
+NJOY Music Player adalah aplikasi pemutar musik desktop modern dan interaktif yang dibangun di atas **Electron.js**, HTML, CSS, dan JavaScript. Aplikasi ini dirancang dengan antarmuka yang sangat *customizable*, ringan, dan dilengkapi dengan tema visual dinamis yang dapat mengubah seluruh komponen UI secara real-time.
 
-## ⚠️ SYARAT WAJIB SEBELUM INSTALL!
-Karena aplikasi ini menggunakan mesin downloader kelas berat, komputer kamu **WAJIB** terinstall:
-1. **Python** (Pastikan 'Add to PATH' dicentang saat install)
-2. **FFmpeg**
-3. Buka CMD/Terminal lalu ketik perintah ini untuk menginstall mesinnya:
-   `pip install spotdl`
-   `spotdl --download-ffmpeg`
-   `pip install yt-dlp`
+---
+
+## 🛠️ Persyaratan Sistem (Wajib)
+Aplikasi ini dilengkapi dengan fitur pencarian dan pengunduhan musik terintegrasi. Agar fitur tersebut berfungsi dengan baik, pastikan komputer Anda telah terinstal:
+
+1. **Node.js** (versi LTS direkomendasikan)
+2. **Python** (Pastikan opsi *'Add to PATH'* dicentang saat instalasi)
+3. **FFmpeg** (Pastikan terdaftar di PATH sistem Anda)
+
+### Instalasi Dependensi Pengunduh
+Jalankan perintah berikut di Terminal / Command Prompt untuk menginstal pustaka pengunduh:
+```bash
+pip install spotdl yt-dlp
+```
+
+---
 
 ## ✨ Fitur Utama
 
-- **Custom Themes Engine:** Ubah tampilan aplikasi secara *real-time* tanpa *restart*. Tema yang tersedia:
-  - 🟩 **Minecraft (Blocky):** UI kotak 8-bit dengan warna tanah dan rumput.
-  - 🕸️ **Spider-Man:** Nuansa merah-biru jaring laba-laba dengan *font* komik.
-  - 🤠 **Toy Story:** Warna cerah ala mainan (kuning, merah, biru).
-  - 💻 **Terminal Hacker:** Hijau neon dengan gaya *command prompt* dan kursor berkedip.
-  - 🛡️ **Marvel (MCU):** Tema merah gelap dengan aksen emas Iron Man.
-  - 👾 **Pixel Art Retro:** Gaya antarmuka konsol *game* lawas (NES/Gameboy).
-- **Smart Playlist Search:** Filter dan cari lagu secara instan (*real-time*).
-- **Global Shortcuts:** Kontrol musik dari mana saja, bahkan saat bermain *game*:
-  - `Ctrl + Space` : Play / Pause
-  - `Ctrl + Right` : Next Track
-  - `Ctrl + Left` : Previous Track
-  - `Ctrl + Up/Down`: Volume Up / Down
-  - `Ctrl + M` : Mute / Unmute
-- **Mode Fleksibel:** Mendukung mode *Always on Top* dan berjalan di latar belakang (System Tray).
-- **Mini Player** 
-- **Search Lagu & Download via yt-dlp**
+### 🎨 Sistem Tema Real-Time (Custom Themes Engine)
+Ubah nuansa visual pemutar musik Anda secara instan tanpa perlu memuat ulang (*restart*) aplikasi:
+* 👾 **Pixel Art Retro:** Estetika konsol game lawas (8-bit) dengan warna dan font *pixelated*.
+* 💻 **Terminal Hacker:** Tema gelap dengan teks hijau neon ala command prompt dan kursor berkedip.
+* 🟩 **Minecraft (Blocky):** UI bertekstur kaku 8-bit khas elemen tanah dan rumput.
+* 🕸️ **Spider-Man:** Nuansa merah-biru jaring laba-laba yang ikonik dengan font bergaya komik.
+* 🛡️ **Marvel (MCU):** Kombinasi warna merah gelap dengan aksen emas Iron Man yang premium.
+* 🤠 **Toy Story:** Warna-warni ceria yang menyenangkan khas dunia mainan Woody & Buzz.
+
+### 📥 Pengunduh Musik Cerdas (YouTube & Spotify)
+* **Spotify Downloader (SpotDL):** Unduh lagu secara otomatis dengan memasukkan tautan lagu Spotify.
+* **YouTube HD Downloader:** Mencari lagu langsung dari aplikasi atau memasukkan tautan YouTube. Aplikasi akan mencari cover album resmi beresolusi tinggi (HD 1000x1000) melalui iTunes API secara otomatis dan menyematkannya ke dalam file MP3 menggunakan FFmpeg (dengan fallback otomatis ke thumbnail HD YouTube).
+
+### 🗑️ Manajemen Playlist yang Mudah
+* **Tombol Hapus (Delete) Langsung:** Hapus lagu dari dalam aplikasi tanpa perlu membuka folder secara manual di File Explorer. Dilengkapi dengan **modal konfirmasi kustom** yang otomatis menyesuaikan dengan tema aktif Anda.
+* **Smart Search:** Cari lagu di playlist Anda secara instan (*real-time filtering*).
+* **Mode Favorit (NJOY Mode):** Tandai lagu favorit dengan tombol hati untuk membuat daftar putar eksklusif.
+
+### 🎤 Lirik Karaoke Berjalan
+* Sinkronisasi otomatis lirik berjalan (*synced lyrics* / LRC format) menggunakan LRCLIB API.
 
 ---
 
-## 📥 Sumber Lagu (.mp3)
-Aplikasi ini memutar file musik berformat `.mp3` secara lokal. 
-Jika kamu ingin mencari dan mendownload lagu-lagu favoritmu (misalnya dari Spotify) untuk diputar di aplikasi ini, kamu bisa menggunakan layanan gratis berikut:
+## ⌨️ Pintasan Keyboard (Shortcuts)
 
-👉 **[Download MP3 via Spotidown](https://spotidown.co/en6)**
+### 📌 Global Shortcuts (Dapat digunakan meski aplikasi di-minimize/background)
+| Pintasan | Fungsi |
+| :--- | :--- |
+| `Ctrl + Shift + Space` | Putar / Jeda (Play / Pause) |
+| `Ctrl + Right` | Lagu Berikutnya (Next Track) |
+| `Ctrl + Left` | Lagu Sebelumnya (Previous Track) |
+| `Ctrl + M` | Bisukan Suara (Mute / Unmute) |
 
-  **BARU DAPAT DOWNLOAD LAGU DARI APLIKASI MENGGUNAAN YTDLP & SPOTDLP**
-
-*(Catatan: Pastikan file lagu berformat `.mp3` dan letakkan di dalam folder `songs` atau buka secara manual dari dalam aplikasi).*
+### 💻 Local Shortcuts (Aktif saat jendela aplikasi difokuskan)
+| Tombol | Fungsi |
+| :--- | :--- |
+| `Space` | Putar / Jeda (Play / Pause) |
+| `Arrow Right` | Lagu Berikutnya (Next Track) |
+| `Arrow Left` | Lagu Sebelumnya (Previous Track) |
+| `Arrow Up` | Naikkan Volume (+5%) |
+| `Arrow Down` | Turunkan Volume (-5%) |
+| `Escape` | Melepas fokus kolom pencarian |
 
 ---
 
-## 🚀 Instalasi & Penggunaan
+## 🚀 Panduan Instalasi & Menjalankan Aplikasi
 
-Pastikan kamu sudah menginstal **[Node.js](https://nodejs.org/)** dan **Git** di komputermu.
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/pikri-beep/audioplayer.git
+   cd audioplayer
+   ```
 
-**1. Clone Repository**
-Buka terminal/CMD, lalu jalankan perintah ini untuk mengunduh kode sumber:
-```bash
-git clone https://github.com/pikri-beep/audioplayer.git
-```
+2. **Install Dependensi Node.js**
+   ```bash
+   npm install
+   ```
 
-**2. Masuk ke Folder Proyek**
-```bash
-cd [NAMA-REPO-KAMU]
-```
+3. **Jalankan Aplikasi**
+   ```bash
+   npm start
+   ```
 
-**3. Install Dependencies**
-Unduh semua modul yang dibutuhkan oleh Electron:
+---
 
-```bash
-npm install
-```
-**4. Jalankan Aplikasi**
-Mulai aplikasi NJOY Music Player:
+## 📂 Struktur Modul Kode Terkini
+Kode aplikasi telah dimodularisasi agar lebih profesional dan mudah dikembangkan:
+* `main.js` & `renderer.js`: Berperan sebagai loader & bootstrapper utama (ringkas, <100 baris).
+* `src/main/`: Menangani manajemen jendela (BrowserWindow), global shortcuts, event IPC, dan proses download (yt-dlp/ffmpeg).
+* `src/renderer/`: Mengatur audio playback, rendering playlist, parser lirik, dan seluruh interaksi UI.
 
-```bash
-npm start
-```
+---
 
-# ⚙️ Cara Menggunakan Aplikasi
-1. Memasukkan Lagu: Aplikasi akan otomatis membaca lagu-lagu .mp3 yang ada di dalam folder songs (jika folder belum ada, aplikasi akan membuatnya otomatis saat pertama kali dijalankan). Kamu juga bisa menggunakan tombol Open File di aplikasi untuk memilih lagu dari folder lain.
-
-2. Mengganti Tema: Klik ikon Gear (Settings) di pojok kanan atas, lalu pilih tema dari menu dropdown. Seluruh UI (termasuk modal pop-up dan scrollbar) akan langsung beradaptasi dengan tema yang dipilih!
-
-3. Mute Cepat: Klik langsung pada ikon speaker di sebelah slider volume untuk mematikan/menyalakan suara seketika.
-
-# 🛠️ Teknologi yang Digunakan
-1. Electron.js - Desktop App Framework
-2. Vanilla JS (ES6) - Logika & IPC Communication
-3. CSS3 - Custom Theming & Animations
-4. HTML5 - Audio API & Struktur UI
-5. Font Awesome - Ikon Vektor
-6. Google Fonts - Custom Fonts (Press Start 2P, Bangers, Chewy)
-
-
-***
+## 🛠️ Teknologi yang Digunakan
+* **Electron.js** - Framework Aplikasi Desktop
+* **Vanilla JS (ES6)** - Logika Aplikasi & Komunikasi IPC
+* **CSS3** - Custom Theming, Layout Flexbox, & Animasi
+* **HTML5** - Struktur UI & Audio API
+* **Vibrant.js** - Ekstraksi warna cover album dinamis untuk warna aksen UI
+* **Font Awesome** - Ikonografi UI
