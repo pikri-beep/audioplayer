@@ -78,7 +78,7 @@ function registerDownloaderHandlers() {
                 return [];
             }
 
-            const videos = r.videos.slice(0, 5); 
+            const videos = r.videos.slice(0, 15); 
             return videos.map(v => {
                 const thumbnailSrc = v.image || v.thumbnail || "assets/logo.png";
                 const channelName = (v.author && v.author.name) ? v.author.name : "Unknown Channel";

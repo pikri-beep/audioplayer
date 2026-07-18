@@ -15,6 +15,79 @@ function handleDownloadResult(result) {
     }
 }
 
+function renderSearchResultsPage() {
+    const { ytSearchResults } = window.player.dom;
+    const { searchResults, searchCurrentPage, searchResultsPerPage } = window.player.state;
+    
+    ytSearchResults.innerHTML = '';
+    
+    const startIndex = (searchCurrentPage - 1) * searchResultsPerPage;
+    const endIndex = Math.min(startIndex + searchResultsPerPage, searchResults.length);
+    const pageItems = searchResults.slice(startIndex, endIndex);
+    
+    pageItems.forEach(video => {
+        const li = document.createElement('li');
+        li.className = 'yt-search-item';
+        li.innerHTML = `
+            <div class="yt-search-thumb-container">
+                <img src="${video.thumbnail}" class="yt-search-thumb">
+                <span class="yt-search-duration">${video.timestamp}</span>
+            </div>
+            <div class="yt-search-info">
+                <div class="yt-search-title">${video.title}</div>
+                <div class="yt-search-author">${video.author}</div>
+            </div>
+            <button class="yt-search-dl-btn" title="Unduh Lagu">
+                <i class="fa-solid fa-arrow-down-long"></i>
+            </button>
+        `;
+        
+        const handleDownload = async (e) => {
+            e.stopPropagation();
+            const { ytStatusText } = window.player.dom;
+            ytSearchResults.innerHTML = '';
+            document.getElementById('yt-pagination').style.display = 'none';
+            ytStatusText.style.display = 'block';
+            ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>...`;
+            const result = await ipcRenderer.invoke('download-yt', video.url);
+            handleDownloadResult(result);
+        };
+        
+        li.addEventListener('click', handleDownload);
+        const dlBtn = li.querySelector('.yt-search-dl-btn');
+        if (dlBtn) dlBtn.addEventListener('click', handleDownload);
+        
+        ytSearchResults.appendChild(li);
+    });
+    
+    updatePaginationControls();
+}
+
+function updatePaginationControls() {
+    const { searchResults, searchCurrentPage, searchResultsPerPage } = window.player.state;
+    const totalPages = Math.ceil(searchResults.length / searchResultsPerPage);
+    
+    const paginationContainer = document.getElementById('yt-pagination');
+    const pageInfo = document.getElementById('yt-page-info');
+    const prevBtn = document.getElementById('yt-prev-page-btn');
+    const nextBtn = document.getElementById('yt-next-page-btn');
+    
+    if (searchResults.length > 0) {
+        paginationContainer.style.display = 'flex';
+        pageInfo.innerText = `Halaman ${searchCurrentPage} dari ${totalPages}`;
+        
+        prevBtn.disabled = searchCurrentPage === 1;
+        nextBtn.disabled = searchCurrentPage === totalPages;
+        
+        prevBtn.style.opacity = prevBtn.disabled ? '0.4' : '1';
+        prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+        nextBtn.style.opacity = nextBtn.disabled ? '0.4' : '1';
+        nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+    } else {
+        paginationContainer.style.display = 'none';
+    }
+}
+
 function initializeDownloadListeners() {
     const { ytDownloadBtn, ytPopup, closeYtBtn, ytSearchResults, ytStatusText, startYtDlBtn, ytUrlInput } = window.player.dom;
     
@@ -28,7 +101,10 @@ function initializeDownloadListeners() {
         closeYtBtn.addEventListener('click', () => { 
             ytPopup.classList.remove('show'); 
             ytSearchResults.innerHTML = ''; 
+            document.getElementById('yt-pagination').style.display = 'none';
             ytStatusText.style.display = 'none'; 
+            window.player.state.searchResults = [];
+            window.player.state.searchCurrentPage = 1;
         });
     }
 
@@ -38,6 +114,7 @@ function initializeDownloadListeners() {
             if (!query) return alert("Ketik judul lagu atau paste link bang!");
 
             ytSearchResults.innerHTML = '';
+            document.getElementById('yt-pagination').style.display = 'none';
             ytStatusText.style.display = 'block';
 
             const isSpotify = /open\.spotify\.com/i.test(query);
@@ -62,20 +139,35 @@ function initializeDownloadListeners() {
                     return;
                 }
 
-                results.forEach(video => {
-                    const li = document.createElement('li');
-                    li.style.cssText = `display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; cursor: pointer; margin-bottom: 5px;`;
-                    li.innerHTML = `<img src="${video.thumbnail}" style="width: 50px; border-radius: 4px;"> <span>${video.title}</span>`;
-                    
-                    li.addEventListener('click', async () => {
-                        ytSearchResults.innerHTML = '';
-                        ytStatusText.style.display = 'block';
-                        ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>...`;
-                        const result = await ipcRenderer.invoke('download-yt', video.url);
-                        handleDownloadResult(result);
-                    });
-                    ytSearchResults.appendChild(li);
-                });
+                // Simpan ke state
+                window.player.state.searchResults = results;
+                window.player.state.searchCurrentPage = 1;
+                
+                // Render halaman pertama
+                renderSearchResultsPage();
+            }
+        });
+    }
+    
+    // Pagination button listeners
+    const prevPageBtn = document.getElementById('yt-prev-page-btn');
+    const nextPageBtn = document.getElementById('yt-next-page-btn');
+    
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+            if (window.player.state.searchCurrentPage > 1) {
+                window.player.state.searchCurrentPage--;
+                renderSearchResultsPage();
+            }
+        });
+    }
+    
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(window.player.state.searchResults.length / window.player.state.searchResultsPerPage);
+            if (window.player.state.searchCurrentPage < totalPages) {
+                window.player.state.searchCurrentPage++;
+                renderSearchResultsPage();
             }
         });
     }
@@ -84,5 +176,7 @@ function initializeDownloadListeners() {
 // Daftarkan ke Global Registry
 window.player.downloadController = {
     handleDownloadResult,
+    renderSearchResultsPage,
+    updatePaginationControls,
     initializeDownloadListeners
 };

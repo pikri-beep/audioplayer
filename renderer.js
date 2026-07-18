@@ -66,7 +66,10 @@ window.player = {
         isMuted: false,
         fadeOutInterval: null,
         fadeInInterval: null,
-        lyricsFetchCount: 0
+        lyricsFetchCount: 0,
+        searchResults: [],
+        searchCurrentPage: 1,
+        searchResultsPerPage: 5
     }
 };
 

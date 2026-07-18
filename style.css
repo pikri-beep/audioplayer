@@ -1484,7 +1484,496 @@ body {
     .song-info {
         margin-bottom: 10px;
     }
-    .extra-controls {
-        margin-bottom: 15px;
+}
+
+/* =========================================
+   YouTube Search Popup Custom Cards & Pagination
+   ========================================= */
+.yt-search-item {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 5px;
+    transition: background 0.2s, transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.yt-search-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border-color: var(--theme-glow);
+}
+
+.yt-search-thumb-container {
+    position: relative;
+    width: 70px;
+    height: 42px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.yt-search-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.yt-search-duration {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    font-size: 8px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.yt-search-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.yt-search-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.yt-search-author {
+    font-size: 11px;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.yt-search-dl-btn {
+    background: var(--theme-glow);
+    border: none;
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.2s, background 0.2s, color 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.yt-search-dl-btn:hover {
+    transform: scale(1.15);
+    background: #fff;
+    color: #000;
+}
+
+/* =========================================
+   Theme Overrides for Search Popup (Pixel & Minecraft)
+   ========================================= */
+[data-theme="pixel"] .yt-search-item,
+[data-theme="minecraft"] .yt-search-item {
+    border-radius: 0 !important;
+    border: 2px solid #fff !important;
+    background: #000 !important;
+    box-shadow: 3px 3px 0px #555 !important;
+}
+
+[data-theme="pixel"] .yt-search-item:hover,
+[data-theme="minecraft"] .yt-search-item:hover {
+    border-color: #ffff00 !important;
+    transform: translate(1px, 1px) !important;
+    box-shadow: 2px 2px 0px #555 !important;
+}
+
+[data-theme="pixel"] .yt-search-thumb-container,
+[data-theme="minecraft"] .yt-search-thumb-container {
+    border-radius: 0 !important;
+    border: 1px solid #fff !important;
+}
+
+[data-theme="pixel"] .yt-search-duration,
+[data-theme="minecraft"] .yt-search-duration {
+    border-radius: 0 !important;
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 6px !important;
+}
+
+[data-theme="pixel"] .yt-search-title,
+[data-theme="minecraft"] .yt-search-title {
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 8px !important;
+}
+
+[data-theme="pixel"] .yt-search-author,
+[data-theme="minecraft"] .yt-search-author {
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 6px !important;
+    color: #888 !important;
+}
+
+[data-theme="pixel"] .yt-search-dl-btn,
+[data-theme="minecraft"] .yt-search-dl-btn {
+    border-radius: 0 !important;
+    border: 1px solid #fff !important;
+    background: #000 !important;
+    color: #fff !important;
+    font-size: 8px !important;
+    box-shadow: 1px 1px 0px #555 !important;
+}
+
+[data-theme="pixel"] .yt-search-dl-btn:hover,
+[data-theme="minecraft"] .yt-search-dl-btn:hover {
+    background: #ffff00 !important;
+    color: #000 !important;
+    transform: none !important;
+}
+
+/* =========================================
+   7. TEMA COSMIC BUBBLE (Glassmorphism & Neon Glow)
+   ========================================= */
+[data-theme="cosmic"] {
+    background: radial-gradient(circle at 50% 50%, #150630, #04010d) !important;
+    color: #ffffff;
+    transition: background 0.5s ease;
+}
+
+/* Wadah Gelembung Latar Belakang */
+.cosmic-bg-bubbles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    display: none;
+    pointer-events: none;
+}
+
+[data-theme="cosmic"] .cosmic-bg-bubbles {
+    display: block;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.45;
+    animation: floatBubble 25s infinite linear;
+}
+
+.bubble-1 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.6) 0%, rgba(168, 85, 247, 0) 70%);
+    top: -50px;
+    left: -50px;
+    animation-duration: 20s;
+}
+
+.bubble-2 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.5) 0%, rgba(0, 240, 255, 0) 70%);
+    bottom: -100px;
+    right: -100px;
+    animation-duration: 28s;
+    animation-delay: -5s;
+}
+
+.bubble-3 {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255, 42, 133, 0.4) 0%, rgba(255, 42, 133, 0) 70%);
+    top: 40%;
+    left: 60%;
+    animation-duration: 24s;
+    animation-delay: -2s;
+}
+
+.bubble-4 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(110, 0, 255, 0.5) 0%, rgba(110, 0, 255, 0) 70%);
+    bottom: 30%;
+    left: -80px;
+    animation-duration: 32s;
+    animation-delay: -10s;
+}
+
+@keyframes floatBubble {
+    0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    33% {
+        transform: translate(50px, -60px) rotate(120deg) scale(1.1);
+    }
+    66% {
+        transform: translate(-30px, 40px) rotate(240deg) scale(0.95);
+    }
+    100% {
+        transform: translate(0, 0) rotate(360deg) scale(1);
     }
 }
+
+/* Modifikasi Container & Popups */
+[data-theme="cosmic"] .player-container,
+[data-theme="cosmic"] .popup-content {
+    background: rgba(255, 255, 255, 0.04) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.5), 0 0 25px rgba(182, 36, 255, 0.15) !important;
+    border-radius: 20px !important;
+}
+
+[data-theme="cosmic"] .playlist-overlay {
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+}
+
+/* Buttons */
+[data-theme="cosmic"] .mode-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 30px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+    font-size: 11px !important;
+    transition: all 0.3s ease !important;
+}
+
+[data-theme="cosmic"] .mode-btn.active,
+[data-theme="cosmic"] .mode-btn:hover {
+    background: linear-gradient(135deg, #00f0ff, #b624ff) !important;
+    border-color: transparent !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.6) !important;
+    transform: scale(1.05) !important;
+}
+
+[data-theme="cosmic"] .header-btn {
+    color: rgba(255,255,255,0.7) !important;
+    font-size: 20px !important;
+    transition: color 0.2s !important;
+}
+
+[data-theme="cosmic"] .header-btn:hover {
+    color: #ff2a85 !important;
+}
+
+/* Album Art */
+[data-theme="cosmic"] .album-art {
+    border: 3px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(182, 36, 255, 0.2) !important;
+    border-radius: 18px !important;
+}
+
+[data-theme="cosmic"] .camera-btn {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    border-radius: 50% !important;
+}
+
+[data-theme="cosmic"] .camera-btn:hover {
+    background: #00f0ff !important;
+    color: #000 !important;
+    box-shadow: 0 0 10px #00f0ff !important;
+}
+
+/* Text */
+[data-theme="cosmic"] #song-title {
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.4) !important;
+    letter-spacing: 0.5px !important;
+}
+
+[data-theme="cosmic"] #song-artist {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 12px !important;
+    text-shadow: 0 0 5px rgba(182, 36, 255, 0.3) !important;
+}
+
+/* Playlist Elements */
+[data-theme="cosmic"] #playlist-ul li {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border-radius: 10px !important;
+    padding: 10px 15px !important;
+    margin-bottom: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="cosmic"] #playlist-ul li:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(0, 240, 255, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+[data-theme="cosmic"] #playlist-ul li.active {
+    background: rgba(182, 36, 255, 0.1) !important;
+    border-color: rgba(182, 36, 255, 0.4) !important;
+    color: #00f0ff !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 15px rgba(182, 36, 255, 0.2) !important;
+}
+
+[data-theme="cosmic"] .heart-btn {
+    color: rgba(255,255,255,0.4) !important;
+}
+
+[data-theme="cosmic"] .heart-btn.liked {
+    color: #ff2a85 !important;
+    text-shadow: 0 0 8px rgba(255, 42, 133, 0.6) !important;
+}
+
+[data-theme="cosmic"] .delete-btn {
+    color: rgba(255,255,255,0.4) !important;
+}
+
+[data-theme="cosmic"] .delete-btn:hover {
+    color: #ff3333 !important;
+    text-shadow: 0 0 8px rgba(255, 51, 51, 0.6) !important;
+}
+
+/* Control Buttons */
+[data-theme="cosmic"] .btn-secondary,
+[data-theme="cosmic"] .btn-main {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+[data-theme="cosmic"] .btn-main {
+    width: 54px !important;
+    height: 54px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 15px rgba(182, 36, 255, 0.15) !important;
+}
+
+[data-theme="cosmic"] .btn-secondary:hover {
+    transform: scale(1.15) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border-color: #00f0ff !important;
+    color: #00f0ff !important;
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.4) !important;
+}
+
+[data-theme="cosmic"] .btn-main:hover {
+    transform: scale(1.1) !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: #00f0ff !important;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.6) !important;
+    color: #ffffff !important;
+}
+
+/* Inputs, Selects & Option Dropdowns */
+[data-theme="cosmic"] input[type="text"],
+[data-theme="cosmic"] select {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    padding: 8px 12px !important;
+    outline: none !important;
+}
+
+[data-theme="cosmic"] select option {
+    background: #150630 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="cosmic"] .add-dropdown-menu {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 15px rgba(182, 36, 255, 0.1) !important;
+    border-radius: 12px !important;
+}
+
+[data-theme="cosmic"] .dropdown-item {
+    color: #ffffff !important;
+    background: transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="cosmic"] .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #00f0ff !important;
+}
+
+[data-theme="cosmic"] input[type="text"]:focus,
+[data-theme="cosmic"] select:focus {
+    border-color: #00f0ff !important;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.3) !important;
+}
+
+/* Progress bar & Volume slider */
+[data-theme="cosmic"] #progress-bar,
+[data-theme="cosmic"] #volume-slider {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    height: 6px !important;
+}
+
+[data-theme="cosmic"] #progress-bar::-webkit-slider-runnable-track,
+[data-theme="cosmic"] #volume-slider::-webkit-slider-runnable-track {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Custom Scrollbars */
+[data-theme="cosmic"] ::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+[data-theme="cosmic"] ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.01) !important;
+}
+
+[data-theme="cosmic"] ::-webkit-scrollbar-thumb {
+    background: rgba(182, 36, 255, 0.3) !important;
+    border-radius: 10px !important;
+}
+
+[data-theme="cosmic"] ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 240, 255, 0.5) !important;
+}
+

@@ -4,8 +4,14 @@ const { ipcRenderer } = require('electron');
 const { Vibrant } = require('node-vibrant/node');
 
 function resetDefaultThemeColors() {
-    document.documentElement.style.setProperty('--theme-glow', '#a855f7');
-    document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
+    const currentTheme = document.body.getAttribute('data-theme') || 'default';
+    if (currentTheme === 'cosmic') {
+        document.documentElement.style.setProperty('--theme-glow', '#00f0ff');
+        document.documentElement.style.setProperty('--theme-border', 'rgba(0, 240, 255, 0.2)');
+    } else {
+        document.documentElement.style.setProperty('--theme-glow', '#a855f7');
+        document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
+    }
 }
 
 function loadPlaylist(isInitial = false) {
