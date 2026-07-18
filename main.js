@@ -1,3 +1,7 @@
+process.on('unhandledRejection', (reason, promise) => {
+    console.warn('[Unhandled Rejection]', reason);
+});
+
 const {
   app,
   BrowserWindow,
@@ -11,8 +15,25 @@ const {
 } = require('electron');
 
 const path = require('path');
+app.setPath('userData', path.join(app.getPath('appData'), 'audioplayer-data'));
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+    app.quit();
+    return;
+}
+
+app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (win && !win.isDestroyed()) {
+        if (win.isMinimized()) win.restore();
+        win.show();
+        win.focus();
+    }
+});
+
 const fs = require('fs');
 const ytSearch = require('yt-search');
+const { exec } = require('child_process');
 
 let win;
 let tray;
@@ -21,47 +42,61 @@ let isTrayEnabled = true;
 let notificationWin = null;
 let notificationEnabled = true;
 let miniWin = null;
+let isAlwaysOnTopSetting = false;
+
+function safeSend(windowObj, channel, ...args) { if (windowObj && !windowObj.isDestroyed() && windowObj.webContents && !windowObj.webContents.isDestroyed()) { windowObj.webContents.send(channel, ...args); } }
 
 
 
 function updateThumbar(isPlaying) {
-    win.setThumbarButtons([
-        {
-            tooltip: "Previous",
-            icon: nativeImage.createFromPath(
-                path.join(__dirname, "assets/icons/previous.png")
-            ),
-            click() {
-                win.webContents.send("thumb-prev");
-            }
-        },
+    try {
+        if (win && !win.isDestroyed()) {
+            win.setThumbarButtons([
+                {
+                    tooltip: "Previous",
+                    icon: nativeImage.createFromPath(
+                        path.join(__dirname, "assets/icons/previous.png")
+                    ),
+                    click() {
+                        if (win && !win.isDestroyed()) {
+                            safeSend(win, "thumb-prev");
+                        }
+                    }
+                },
 
-        {
-            tooltip: isPlaying ? "Pause" : "Play",
-            icon: nativeImage.createFromPath(
-                path.join(
-                    __dirname,
-                    isPlaying
-                        ? "assets/icons/pause.png"
-                        : "assets/icons/play.png"
-                )
-            ),
-            click() {
-                win.webContents.send("thumb-play");
-            }
-        },
+                {
+                    tooltip: isPlaying ? "Pause" : "Play",
+                    icon: nativeImage.createFromPath(
+                        path.join(
+                            __dirname,
+                            isPlaying
+                                ? "assets/icons/pause.png"
+                                : "assets/icons/play.png"
+                        )
+                    ),
+                    click() {
+                        if (win && !win.isDestroyed()) {
+                            safeSend(win, "thumb-play");
+                        }
+                    }
+                },
 
-        {
-            tooltip: "Next",
-            icon: nativeImage.createFromPath(
-                path.join(__dirname, "assets/icons/next.png")
-            ),
-            click() {
-                win.webContents.send("thumb-next");
-            }
+                {
+                    tooltip: "Next",
+                    icon: nativeImage.createFromPath(
+                        path.join(__dirname, "assets/icons/next.png")
+                    ),
+                    click() {
+                        if (win && !win.isDestroyed()) {
+                            safeSend(win, "thumb-next");
+                        }
+                    }
+                }
+            ]);
         }
-    ]);
-
+    } catch (e) {
+        console.error("Gagal updateThumbar:", e.message);
+    }
 }
 
 function createWindow () {
@@ -72,6 +107,7 @@ function createWindow () {
     minHeight: 450,
     resizable: true,
     autoHideMenuBar: true, 
+    icon: path.join(__dirname, 'assets', 'logo.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -82,9 +118,9 @@ function createWindow () {
   win.loadFile('index.html');
   ipcMain.on('toggle-mini-player', (event, isMiniMode) => {
     if (isMiniMode) {
-        win.hide(); // Sembunyikan jendela utama
+        if (win && !win.isDestroyed()) win.hide(); // Sembunyikan jendela utama
         
-        if (!miniWin) {
+        if (!miniWin || miniWin.isDestroyed()) {
             // Buat jendela widget baru yang frameless
             miniWin = new BrowserWindow({
                 width: 320, 
@@ -100,24 +136,26 @@ function createWindow () {
             });
             miniWin.loadFile('mini.html');
             miniWin.on('moved', () => {
-                const bounds = miniWin.getBounds();
-                const display = screen.getDisplayMatching(bounds);
-                const workArea = display.workArea; // Menghitung layar yang aman (tanpa taskbar)
+                if (miniWin && !miniWin.isDestroyed()) {
+                    const bounds = miniWin.getBounds();
+                    const display = screen.getDisplayMatching(bounds);
+                    const workArea = display.workArea; // Menghitung layar yang aman (tanpa taskbar)
 
-                let newX = bounds.x;
-                let newY = bounds.y;
+                    let newX = bounds.x;
+                    let newY = bounds.y;
 
-                // Cek Kiri - Kanan
-                if (bounds.x < workArea.x) newX = workArea.x;
-                else if (bounds.x + bounds.width > workArea.x + workArea.width) newX = workArea.x + workArea.width - bounds.width;
+                    // Cek Kiri - Kanan
+                    if (bounds.x < workArea.x) newX = workArea.x;
+                    else if (bounds.x + bounds.width > workArea.x + workArea.width) newX = workArea.x + workArea.width - bounds.width;
 
-                // Cek Atas - Bawah Taskbar
-                if (bounds.y < workArea.y) newY = workArea.y;
-                else if (bounds.y + bounds.height > workArea.y + workArea.height) newY = workArea.y + workArea.height - bounds.height;
+                    // Cek Atas - Bawah Taskbar
+                    if (bounds.y < workArea.y) newY = workArea.y;
+                    else if (bounds.y + bounds.height > workArea.y + workArea.height) newY = workArea.y + workArea.height - bounds.height;
 
-                // Kalau posisinya melanggar, jepret kembali ke posisi aman
-                if (newX !== bounds.x || newY !== bounds.y) {
-                    miniWin.setPosition(newX, newY);
+                    // Kalau posisinya melanggar, jepret kembali ke posisi aman
+                    if (newX !== bounds.x || newY !== bounds.y) {
+                        miniWin.setPosition(newX, newY);
+                    }
                 }
             });
 
@@ -128,41 +166,40 @@ function createWindow () {
         }
         
         // Minta jendela utama untuk mengirimkan data lagu saat ini ke widget
-        win.webContents.send('request-state-for-mini');
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'request-state-for-mini');
+        }
         
     } else {
-        if (miniWin) miniWin.hide();
-        win.show(); // Tampilkan jendela utama lagi
+        if (miniWin && !miniWin.isDestroyed()) miniWin.hide();
+        if (win && !win.isDestroyed()) win.show(); // Tampilkan jendela utama lagi
     }
   });
 
   // Jembatan komunikasi: Menerima info lagu dari utama -> kirim ke widget
   ipcMain.on('sync-mini-player', (event, data) => {
-      if (miniWin) {
-          miniWin.webContents.send('update-mini-player', data);
-      }
+      safeSend(miniWin, 'update-mini-player', data);
   });
 
   // Jembatan komunikasi: Menerima klik tombol dari widget -> suruh utama eksekusi
   ipcMain.on('mini-action', (event, action) => {
       if (action === 'expand') {
-          if (miniWin) miniWin.hide();
-          win.show();
-          win.webContents.send('set-mini-mode', false); // Kembalikan icon compress
+          if (miniWin && !miniWin.isDestroyed()) miniWin.hide();
+          if (win && !win.isDestroyed()) {
+              win.show();
+              safeSend(win, 'set-mini-mode', false); // Kembalikan icon compress
+          }
       } else if (action === 'play') {
-          win.webContents.send('thumb-play'); 
+          if (win && !win.isDestroyed()) safeSend(win, 'thumb-play'); 
       } else if (action === 'next') {
-          win.webContents.send('thumb-next');
+          if (win && !win.isDestroyed()) safeSend(win, 'thumb-next');
       } else if (action === 'prev') {
-          win.webContents.send('thumb-prev');
+          if (win && !win.isDestroyed()) safeSend(win, 'thumb-prev');
       }
   });
 
 // 1. Kasih tau Electron kalau kita emang beneran niat mau quit
-app.on('before-quit', () => {
-    isQuiting = true;
-});
-
+app.on('before-quit', () => { isQuiting = true; if (miniWin && !miniWin.isDestroyed()) miniWin.destroy(); if (notificationWin && !notificationWin.isDestroyed()) notificationWin.destroy(); if (tray && !tray.isDestroyed()) { tray.destroy(); tray = null; } });
 // 2. Logika nutup window
 win.on('close', (event) => {
     // Kalau settingan Tray NYALA dan user gak ngeklik "Keluar" dari tray menu
@@ -172,6 +209,17 @@ win.on('close', (event) => {
     }
     // Kalau Tray MATI, kita gak ngapa-ngapain di sini. 
     // Biarkan Electron menghancurkan window-nya secara alami.
+});
+
+win.on('closed', () => {
+    try {
+        if (miniWin && !miniWin.isDestroyed()) {
+            miniWin.destroy();
+        }
+    } catch (e) {
+        console.error("Gagal destroy miniWin:", e.message);
+    }
+    win = null;
 });
 
 // 3. Pas window-nya beneran hancur (karena tray mati), suruh app beneran berhenti (lagu mati)
@@ -224,59 +272,115 @@ function showLiveCard(song) {
 
     if (!notificationEnabled) return;
 
-    if (!notificationWin) {
-
+    if (!notificationWin || notificationWin.isDestroyed()) {
         createNotificationWindow();
-
     }
 
-    notificationWin.show();
+    if (notificationWin && !notificationWin.isDestroyed()) {
+        try {
+            notificationWin.show();
+        } catch (e) {
+            console.warn("Gagal show notificationWin:", e.message);
+        }
 
-    notificationWin.webContents.send(
-        "song-data",
-        song
-    );
+        safeSend(notificationWin, "song-data", song);
 
-    clearTimeout(notificationWin.hideTimer);
+        clearTimeout(notificationWin.hideTimer);
 
-    notificationWin.hideTimer = setTimeout(() => {
-
-        notificationWin.hide();
-
-    }, 4000);
+        notificationWin.hideTimer = setTimeout(() => {
+            try {
+                if (notificationWin && !notificationWin.isDestroyed()) {
+                    notificationWin.hide();
+                }
+            } catch (e) {
+                console.warn("Gagal hide notificationWin:", e.message);
+            }
+        }, 4000);
+    }
 
 }
 
 app.whenReady().then(() => {
 
+    // Buat folder covers jika belum ada
+    const coversFolder = path.join(__dirname, 'covers');
+    if (!fs.existsSync(coversFolder)) {
+        fs.mkdirSync(coversFolder);
+    }
+
+    // Buat folder songs jika belum ada
+    const songsFolder = path.join(__dirname, 'songs');
+    if (!fs.existsSync(songsFolder)) {
+        fs.mkdirSync(songsFolder);
+    }
+
     createWindow();
     createNotificationWindow();
     updateThumbar(false);
+    checkSystemRequirements();
 
-    // Pakai icon default Electron dulu
-    const icon = nativeImage.createFromPath(
-    path.join(__dirname, "assets", "logo.png")
-    );  
-    
     function checkSystemRequirements() {
-    exec('python --version', (error) => {
-        if (error) {
-            dialog.showMessageBox({
-                type: 'error',
-                title: 'NJOY Error',
-                message: 'Waduh! NJOY butuh Python & SpotDL.\n\nSilakan install Python (tambahkan ke PATH) & ketik "pip install spotdl" di terminal dulu ya bang!',
-            });
-        }
-    });
-}
+        exec('yt-dlp --version', (error) => {
+            if (error) {
+                dialog.showMessageBox({
+                    type: 'warning',
+                    title: 'NJOY Warning - yt-dlp Tidak Ditemukan',
+                    message: 'Waduh! NJOY butuh "yt-dlp" untuk mengunduh lagu dari YouTube.\n\nSilakan instal yt-dlp terlebih dahulu agar fitur unduh YouTube berfungsi.',
+                });
+            }
+        });
+
+        exec('python -m spotdl --version', (error) => {
+            if (error) {
+                dialog.showMessageBox({
+                    type: 'warning',
+                    title: 'NJOY Warning - Python/SpotDL Tidak Ditemukan',
+                    message: 'Waduh! NJOY butuh Python dan SpotDL untuk mengunduh lagu dari Spotify.\n\nSilakan instal Python (tambahkan ke PATH) & ketik "pip install spotdl" di terminal Anda.',
+                });
+            }
+        });
+    }
 
     globalShortcut.register('CommandOrControl+Shift+Space', () => {
-    win.webContents.send("thumb-play");});
+        if (win && !win.isDestroyed()) {
+            safeSend(win, "thumb-play");
+        }
+    });
     globalShortcut.register('CommandOrControl+Right', () => {
-    win.webContents.send("thumb-next");});
+        if (win && !win.isDestroyed()) {
+            safeSend(win, "thumb-next");
+        }
+    });
     globalShortcut.register('CommandOrControl+Left', () => {
-    win.webContents.send("thumb-prev");});
-    globalShortcut.register('CommandOrControl+M', () => { if (win) win.webContents.send('shortcut-mute'); });
+        if (win && !win.isDestroyed()) {
+            safeSend(win, "thumb-prev");
+        }
+    });
+    globalShortcut.register('CommandOrControl+M', () => {
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'shortcut-mute');
+        }
+    });
+    globalShortcut.register('VolumeUp', () => {
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'shortcut-volume-up');
+        }
+    });
+    globalShortcut.register('CommandOrControl+Up', () => {
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'shortcut-volume-up');
+        }
+    });
+    globalShortcut.register('VolumeDown', () => {
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'shortcut-volume-down');
+        }
+    });
+    globalShortcut.register('CommandOrControl+Down', () => {
+        if (win && !win.isDestroyed()) {
+            safeSend(win, 'shortcut-volume-down');
+        }
+    });
 
 
 
@@ -284,13 +388,17 @@ app.whenReady().then(() => {
 
 // Listener untuk buka folder ambil file musik
 ipcMain.handle('open-file-dialog', async () => {
-    const result = await dialog.showOpenDialog({
-        properties: ['openFile', 'multiSelections'],
-        filters: [{ name: 'Audio Files', extensions: ['mp3', 'wav', 'm4a', 'ogg'] }]
-    });
-    
-    if (!result.canceled) {
-        return result.filePaths;
+    try {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile', 'multiSelections'],
+            filters: [{ name: 'Audio Files', extensions: ['mp3', 'wav', 'm4a', 'ogg'] }]
+        });
+        
+        if (!result.canceled) {
+            return result.filePaths;
+        }
+    } catch (err) {
+        console.error("Gagal open-file-dialog:", err.message);
     }
     return [];
 });
@@ -322,27 +430,35 @@ ipcMain.handle('get-metadata', async (event, filePath) => {
 
 // Tambahkan di main.js
 ipcMain.handle('upload-custom-cover', async (event, songName) => {
-    const result = await dialog.showOpenDialog({
-        properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'gif'] }]
-    });
-    
-    if (!result.canceled) {
-        const sourcePath = result.filePaths[0];
-        // Sekarang file disimpan menggunakan NAMA LAGU biar spesifik!
-        const destPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
-        fs.copyFileSync(sourcePath, destPath);
-        return destPath; 
+    try {
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{ name: 'Images', extensions: ['jpg', 'png', 'jpeg', 'gif'] }]
+        });
+        
+        if (!result.canceled) {
+            const sourcePath = result.filePaths[0];
+            // Sekarang file disimpan menggunakan NAMA LAGU biar spesifik!
+            const destPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
+            fs.copyFileSync(sourcePath, destPath);
+            return destPath; 
+        }
+    } catch (err) {
+        console.error("Gagal upload-custom-cover:", err.message);
     }
     return null;
 });
 
 // TAMBAHKAN MESIN UNTUK MENGHAPUS COVER:
 ipcMain.handle('remove-custom-cover', async (event, songName) => {
-    const targetPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
-    if (fs.existsSync(targetPath)) {
-        fs.unlinkSync(targetPath); // Hapus gambar custom dari komputer
-        return true;
+    try {
+        const targetPath = path.join(__dirname, 'covers', `${songName}-cover.jpg`);
+        if (fs.existsSync(targetPath)) {
+            fs.unlinkSync(targetPath); // Hapus gambar custom dari komputer
+            return true;
+        }
+    } catch (err) {
+        console.error("Gagal remove-custom-cover:", err.message);
     }
     return false;
 });
@@ -350,7 +466,6 @@ ipcMain.handle('remove-custom-cover', async (event, songName) => {
 // =========================================================
 // MESIN YOUTUBE SEARCH & DOWNLOAD
 // =========================================================
-const { exec } = require('child_process');
 
 // 1. Fungsi Pencarian YouTube (Versi Anti-Crash & Super Safe)
 ipcMain.handle('search-yt', async (event, query) => {
@@ -441,21 +556,21 @@ ipcMain.on("show-notification", (_, song) => {
 });
 
 ipcMain.on("live-prev", () => {
-
-    win.webContents.send("thumb-prev");
-
+    if (win && !win.isDestroyed()) {
+        safeSend(win, "thumb-prev");
+    }
 });
 
 ipcMain.on("live-play", () => {
-
-    win.webContents.send("thumb-play");
-
+    if (win && !win.isDestroyed()) {
+        safeSend(win, "thumb-play");
+    }
 });
 
 ipcMain.on("live-next", () => {
-
-    win.webContents.send("thumb-next");
-
+    if (win && !win.isDestroyed()) {
+        safeSend(win, "thumb-next");
+    }
 });
 
 ipcMain.on("toggle-notification", (_, enabled) => {
@@ -468,7 +583,7 @@ ipcMain.on("toggle-tray", (_, enabled) => {
     isTrayEnabled = enabled;
 
     if (enabled) {
-        if (!tray) {
+        if (!tray || tray.isDestroyed()) {
             const icon = nativeImage.createFromPath(
                 path.join(__dirname, "assets", "logo.png")
             );
@@ -479,7 +594,9 @@ ipcMain.on("toggle-tray", (_, enabled) => {
                     {
                         label: "🎵 Buka Player",
                         click() {
-                            win.show();
+                            if (win && !win.isDestroyed()) {
+                                win.show();
+                            }
                         }
                     },
                     {
@@ -495,14 +612,21 @@ ipcMain.on("toggle-tray", (_, enabled) => {
                 ])
             );
             tray.on("click", () => {
-                if (win.isVisible())
-                    win.hide();
-                else
-                    win.show();
+                if (win && !win.isDestroyed()) {
+                    if (win.isMinimized()) {
+                        win.restore();
+                        win.focus();
+                    } else if (win.isVisible()) {
+                        win.hide();
+                    } else {
+                        win.show();
+                        win.focus();
+                    }
+                }
             });
         }
     } else {
-        if (tray) {
+        if (tray && !tray.isDestroyed()) {
             tray.destroy();
             tray = null;
         }
@@ -511,7 +635,7 @@ ipcMain.on("toggle-tray", (_, enabled) => {
 
 ipcMain.on("toggle-ontop", (_, enabled) => {
     isAlwaysOnTopSetting = enabled; // Simpan memori
-    if (win) {
+    if (win && !win.isDestroyed()) {
         win.setAlwaysOnTop(enabled);
     }
 });

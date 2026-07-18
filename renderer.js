@@ -1,3 +1,7 @@
+window.addEventListener('unhandledrejection', (event) => {
+    console.warn('[Renderer Unhandled Rejection]', event.reason);
+});
+
 const fs = require('fs');
 const { ipcRenderer } = require('electron');
 const path = require('path');
@@ -55,18 +59,52 @@ let currentLyricIndex = -1;
 let targetVolume = 0.7; 
 let lastVolume = 0.7; 
 let isMuted = false;
+audio.volume = targetVolume; // Set volume awal agar sinkron dengan UI slider
+
+let fadeOutInterval = null;
+let fadeInInterval = null;
+let lyricsFetchCount = 0;
 
 // 2. FUNGSI LOAD & RENDER PLAYLIST
-function loadPlaylist() {
+function resetDefaultThemeColors() {
+    document.documentElement.style.setProperty('--theme-glow', '#a855f7');
+    document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
+}
+
+function loadPlaylist(isInitial = false) {
     try {
         if (!fs.existsSync(songsFolder)) fs.mkdirSync(songsFolder);
-        playlist = fs.readdirSync(songsFolder).filter(file => file.endsWith('.mp3'));
+        const oldSongName = playlist[currentSongIndex];
+        playlist = fs.readdirSync(songsFolder).filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return ['.mp3', '.wav', '.m4a', '.ogg'].includes(ext);
+        });
+        unplayedShuffle = [];
+        
         if (playlist.length > 0) {
+            if (oldSongName) {
+                const newIndex = playlist.indexOf(oldSongName);
+                if (newIndex !== -1) {
+                    currentSongIndex = newIndex;
+                } else {
+                    currentSongIndex = 0;
+                }
+            } else {
+                currentSongIndex = 0;
+            }
             renderPlaylist();
-            loadSong(currentSongIndex);
+            
+            // Hanya panggil loadSong jika ini adalah inisialisasi awal ATAU belum ada audio yang dimuat
+            if (isInitial || !audio.src || audio.src === '' || audio.src.endsWith('/undefined') || audio.src.endsWith('\\undefined')) {
+                loadSong(currentSongIndex);
+            }
         } else {
             songTitleEl.innerText = "Playlist Kosong";
             songArtistEl.innerText = "Klik (+) untuk tambah mp3";
+            audio.src = '';
+            const albumArtImg = document.getElementById('album-art-img');
+            if (albumArtImg) albumArtImg.src = "file://" + path.join(__dirname, "covers", "default.png");
+            if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
         }
     } catch (err) { console.error(err); }
 }
@@ -82,7 +120,7 @@ function renderPlaylist() {
         if (index === currentSongIndex) li.classList.add('active');
         
         const span = document.createElement('span');
-        span.innerText = song.replace('.mp3', '');
+        span.innerText = path.parse(song).name;
         span.style.flexGrow = '1';
         span.addEventListener('click', () => { 
             currentSongIndex = index; 
@@ -108,13 +146,16 @@ function renderPlaylist() {
 
 function loadSong(index) {
     if (playlist.length === 0) return;
+    if (index < 0 || index >= playlist.length) {
+        index = 0;
+    }
     currentSongIndex = index;
     const songName = playlist[index];
     const filePath = path.join(songsFolder, songName);
     audio.src = filePath;
     renderPlaylist();
     
-    const cleanName = songName.replace('.mp3', '');
+    const cleanName = path.parse(songName).name;
     if (cleanName.includes('-')) {
         const parts = cleanName.split('-');
         songArtistEl.innerText = parts[0].trim();
@@ -163,17 +204,22 @@ async function extractMetadata(filePath, cleanName) {
                     const rgbString = `${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])}`;
                     document.documentElement.style.setProperty('--theme-glow', `rgb(${rgbString})`);
                     document.documentElement.style.setProperty('--theme-border', `rgba(${rgbString}, 0.3)`);
+                } else {
+                    resetDefaultThemeColors();
                 }
                 if (isMiniMode) syncToMiniPlayer();
-            }).catch(() => { if (isMiniMode) syncToMiniPlayer(); });
+            }).catch(() => {
+                resetDefaultThemeColors();
+                if (isMiniMode) syncToMiniPlayer();
+            });
         } else {
-            document.documentElement.style.setProperty('--theme-glow', '#a855f7');
-            document.documentElement.style.setProperty('--theme-border', 'rgba(168, 85, 247, 0.2)');
+            resetDefaultThemeColors();
             if (isMiniMode) syncToMiniPlayer();
         }
 
     } catch (error) {
         albumArtImg.src = "file://" + path.join(__dirname, "covers", "default.png");
+        resetDefaultThemeColors();
         fetchLyrics(finalArtist, finalTitle); // Tetap coba fetch lirik meski metadata gagal
         if (isMiniMode) syncToMiniPlayer();
     }
@@ -205,15 +251,21 @@ function togglePlay() {
 
 function changeSongWithFade(newIndex) {
     if (playlist.length === 0) return;
+    
+    // Clear any existing fade intervals to prevent overlap/glitches
+    if (fadeOutInterval) clearInterval(fadeOutInterval);
+    if (fadeInInterval) clearInterval(fadeInInterval);
+    
     if (volumeSlider) targetVolume = volumeSlider.value / 100;
     
     let currentVol = audio.volume;
-    let fadeOutInterval = setInterval(() => {
+    fadeOutInterval = setInterval(() => {
         if (currentVol > 0.05) {
             currentVol -= 0.05; 
             audio.volume = Math.max(0, currentVol);
         } else {
             clearInterval(fadeOutInterval);
+            fadeOutInterval = null;
             audio.pause();
             loadSong(newIndex);
             
@@ -225,43 +277,101 @@ function changeSongWithFade(newIndex) {
                 audio.volume = 0; 
                 audio.play().catch(e => console.log(e));
                 playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                let fadeInInterval = setInterval(() => {
-                    if (audio.volume < targetVolume - 0.05) audio.volume += 0.05; 
-                    else { audio.volume = targetVolume; clearInterval(fadeInInterval); }
+                fadeInInterval = setInterval(() => {
+                    if (audio.volume < targetVolume - 0.05) {
+                        audio.volume += 0.05; 
+                    } else {
+                        audio.volume = targetVolume;
+                        clearInterval(fadeInInterval);
+                        fadeInInterval = null;
+                    }
                 }, 40); 
             }
         }
     }, 30); 
 }
 
-function nextSong() {
+function nextSong(isAutomatic = false) {
+    const auto = isAutomatic === true;
     if (playlist.length === 0) return;
     let nextIndex = currentSongIndex;
-    if (isRepeat) nextIndex = currentSongIndex;
+    if (auto && isRepeat) nextIndex = currentSongIndex;
     else if (isShuffle) {
         if (unplayedShuffle.length === 0) {
-            for (let i = 0; i < playlist.length; i++) if (i !== currentSongIndex) unplayedShuffle.push(i);
+            for (let i = 0; i < playlist.length; i++) {
+                if (i !== currentSongIndex) {
+                    if (currentMode !== 'njoy' || njoyList.includes(playlist[i])) {
+                        unplayedShuffle.push(i);
+                    }
+                }
+            }
         }
-        const randomBagIndex = Math.floor(Math.random() * unplayedShuffle.length);
-        nextIndex = unplayedShuffle[randomBagIndex];
-        unplayedShuffle.splice(randomBagIndex, 1);
-    } else nextIndex = (currentSongIndex + 1) % playlist.length;
+        if (unplayedShuffle.length > 0) {
+            const randomBagIndex = Math.floor(Math.random() * unplayedShuffle.length);
+            nextIndex = unplayedShuffle[randomBagIndex];
+            unplayedShuffle.splice(randomBagIndex, 1);
+        } else {
+            nextIndex = currentSongIndex;
+        }
+    } else {
+        if (currentMode === 'njoy') {
+            let found = false;
+            for (let i = 1; i <= playlist.length; i++) {
+                let idx = (currentSongIndex + i) % playlist.length;
+                if (njoyList.includes(playlist[idx])) {
+                    nextIndex = idx;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) nextIndex = currentSongIndex;
+        } else {
+            nextIndex = (currentSongIndex + 1) % playlist.length;
+        }
+    }
     changeSongWithFade(nextIndex); 
 }
 
-function prevSong() {
+function prevSong(isAutomatic = false) {
+    const auto = isAutomatic === true;
     if (playlist.length === 0) return;
     let prevIndex = currentSongIndex;
-    if (isRepeat) prevIndex = currentSongIndex;
-    else if (isShuffle) prevIndex = Math.floor(Math.random() * playlist.length);
-    else prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+    if (auto && isRepeat) prevIndex = currentSongIndex;
+    else if (isShuffle) {
+        if (currentMode === 'njoy') {
+            const likedIndices = [];
+            playlist.forEach((song, idx) => {
+                if (njoyList.includes(song)) likedIndices.push(idx);
+            });
+            if (likedIndices.length > 0) {
+                prevIndex = likedIndices[Math.floor(Math.random() * likedIndices.length)];
+            }
+        } else {
+            prevIndex = Math.floor(Math.random() * playlist.length);
+        }
+    } else {
+        if (currentMode === 'njoy') {
+            let found = false;
+            for (let i = 1; i <= playlist.length; i++) {
+                let idx = (currentSongIndex - i + playlist.length) % playlist.length;
+                if (njoyList.includes(playlist[idx])) {
+                    prevIndex = idx;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) prevIndex = currentSongIndex;
+        } else {
+            prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
+        }
+    }
     changeSongWithFade(prevIndex);
 }
 
 playBtn.addEventListener('click', togglePlay);
 nextBtn.addEventListener('click', nextSong);
 prevBtn.addEventListener('click', prevSong);
-audio.addEventListener('ended', nextSong);
+audio.addEventListener('ended', () => nextSong(true));
 
 audio.addEventListener('timeupdate', () => {
     if (audio.duration) {
@@ -308,6 +418,17 @@ function updateVolumeIcon(vol) {
     else volumeIcon.className = 'fa-solid fa-volume-high'; 
 }
 
+function adjustVolume(change) {
+    let newVol = Math.min(1, Math.max(0, audio.volume + change));
+    newVol = Math.round(newVol * 100) / 100;
+    audio.volume = newVol;
+    targetVolume = newVol;
+    isMuted = newVol === 0;
+    if (volumeSlider) volumeSlider.value = Math.round(newVol * 100);
+    if (volumeText) volumeText.innerText = `${Math.round(newVol * 100)}%`;
+    updateVolumeIcon(newVol);
+}
+
 function toggleMute() {
     if (isMuted) {
         isMuted = false;
@@ -334,6 +455,8 @@ if (volumeSlider) {
     });
 }
 ipcRenderer.on('shortcut-mute', toggleMute);
+ipcRenderer.on('shortcut-volume-up', () => adjustVolume(0.05));
+ipcRenderer.on('shortcut-volume-down', () => adjustVolume(-0.05));
 
 shuffleBtn.addEventListener('click', () => {
     isShuffle = !isShuffle;
@@ -366,15 +489,24 @@ function parseLRC(lrcText) {
 
 async function fetchLyrics(artist, title) {
     if (!lyricsContainer) return;
+    lyricsFetchCount++;
+    const thisFetchId = lyricsFetchCount;
+
     lyricsContainer.innerHTML = '<p class="lyric-placeholder" style="color: #aaa; margin-top: 50px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Mencari lirik...</p>';
     currentLyrics = [];
     currentLyricIndex = -1;
     
     try {
-        const cleanTitle = title.replace(/\(.*\)|\[.*\]/g, '').trim();
-        const url = `https://lrclib.net/api/search?q=${encodeURIComponent(artist + ' ' + cleanTitle)}`;
+        const cleanTitle = title.replace(/\(.*?\)|\[.*?\]/g, '').trim();
+        let query = cleanTitle;
+        if (artist && artist !== "Unknown Artist") {
+            query = artist + ' ' + cleanTitle;
+        }
+        const url = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
         const response = await fetch(url);
         const data = await response.json();
+        
+        if (thisFetchId !== lyricsFetchCount) return; // Abort if another fetch has started
         
         if (data && data.length > 0) {
             const synced = data.find(track => track.syncedLyrics);
@@ -394,6 +526,7 @@ async function fetchLyrics(artist, title) {
         }
         lyricsContainer.innerHTML = '<p class="lyric-placeholder" style="color: #aaa; margin-top: 50px;">Lirik karaoke tidak ditemukan 🥲</p>';
     } catch (err) {
+        if (thisFetchId !== lyricsFetchCount) return;
         lyricsContainer.innerHTML = '<p class="lyric-placeholder" style="color: red; margin-top: 50px;">Gagal memuat lirik (Cek koneksi).</p>';
     }
 }
@@ -408,12 +541,14 @@ document.getElementById('close-popup-btn').addEventListener('click', () => popup
 
 document.getElementById('btn-mode-all').addEventListener('click', () => {
     currentMode = 'all';
+    unplayedShuffle = [];
     document.getElementById('btn-mode-all').classList.add('active');
     document.getElementById('btn-mode-njoy').classList.remove('active');
     renderPlaylist();
 });
 document.getElementById('btn-mode-njoy').addEventListener('click', () => {
     currentMode = 'njoy';
+    unplayedShuffle = [];
     document.getElementById('btn-mode-njoy').classList.add('active');
     document.getElementById('btn-mode-all').classList.remove('active');
     renderPlaylist();
@@ -516,7 +651,22 @@ startYtDlBtn.addEventListener('click', async () => {
 // 9. EVENT LISTENERS LAIN (Dropdown, Miniplayer, Custom Cover)
 addMenuBtn.addEventListener('click', (e) => { e.stopPropagation(); addDropdown.classList.toggle('show'); });
 document.addEventListener('click', () => { if (addDropdown.classList.contains('show')) addDropdown.classList.remove('show'); });
-importFileBtn.addEventListener('click', async () => { addDropdown.classList.remove('show'); const files = await ipcRenderer.invoke('open-file-dialog'); if(files) loadPlaylist(); });
+importFileBtn.addEventListener('click', async () => {
+    addDropdown.classList.remove('show');
+    const files = await ipcRenderer.invoke('open-file-dialog');
+    if (files && files.length > 0) {
+        files.forEach(filePath => {
+            try {
+                const fileName = path.basename(filePath);
+                const destPath = path.join(songsFolder, fileName);
+                fs.copyFileSync(filePath, destPath);
+            } catch (err) {
+                console.error("Gagal mengimpor file:", filePath, err);
+            }
+        });
+        loadPlaylist();
+    }
+});
 importYtBtn.addEventListener('click', () => { addDropdown.classList.remove('show'); ytPopup.classList.add('show'); ytUrlInput.focus(); });
 miniPlayerBtn.addEventListener('click', () => { isMiniMode = !isMiniMode; ipcRenderer.send('toggle-mini-player', isMiniMode); });
 ipcRenderer.on('set-mini-mode', (_, isMini) => { isMiniMode = isMini; });
@@ -528,14 +678,14 @@ const uploadCoverBtn = document.getElementById('upload-cover-btn');
 if (uploadCoverBtn) {
     uploadCoverBtn.addEventListener('click', async () => {
         if (playlist.length === 0) return;
-        const currentSongName = playlist[currentSongIndex].replace('.mp3', '');
+        const currentSongName = path.parse(playlist[currentSongIndex]).name;
         const newCoverPath = await ipcRenderer.invoke('upload-custom-cover', currentSongName);
         if (newCoverPath) document.getElementById('album-art-img').src = `file://${newCoverPath}?t=${new Date().getTime()}`;
     });
     uploadCoverBtn.addEventListener('contextmenu', async (e) => {
         e.preventDefault(); 
         if (playlist.length === 0) return;
-        const currentSongName = playlist[currentSongIndex].replace('.mp3', '');
+        const currentSongName = path.parse(playlist[currentSongIndex]).name;
         const isRemoved = await ipcRenderer.invoke('remove-custom-cover', currentSongName);
         if (isRemoved) extractMetadata(path.join(songsFolder, playlist[currentSongIndex]), currentSongName);
     });
@@ -590,4 +740,4 @@ if (ontopToggle) {
 }
 
 // Inisialisasi awal
-loadPlaylist();
+loadPlaylist(true);
