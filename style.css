@@ -618,50 +618,217 @@ body {
     transform: translate(4px, 4px);
     box-shadow: 0px 0px 0px #000;
 }
-
-[data-theme="pixel"] #playlist-ul::-webkit-scrollbar-thumb { background: #fff; border-radius: 0; }
-[data-theme="pixel"] #playlist-ul li { border-radius: 0; border: 1px dashed transparent; }
-[data-theme="pixel"] #playlist-ul li::before { content: '-'; margin-right: 10px; color: #aaa; }
-[data-theme="pixel"] #playlist-ul li:hover { background: #000; border: 1px dashed #fff; }
-[data-theme="pixel"] #playlist-ul li:hover::before { content: '>'; color: #fff; }
+[data-theme="pixel"] #playlist-ul {
+    scrollbar-width: thin;
+}
+[data-theme="pixel"] #playlist-ul::-webkit-scrollbar {
+    width: 8px;
+    background: #000;
+}
+[data-theme="pixel"] #playlist-ul::-webkit-scrollbar-track {
+    background: #000;
+    border-left: 2px solid #fff;
+}
+[data-theme="pixel"] #playlist-ul::-webkit-scrollbar-thumb {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 0;
+}
+[data-theme="pixel"] #playlist-ul li {
+    border-radius: 0;
+    border: 1px dashed transparent;
+    font-size: 8px !important;
+    color: #fff;
+    align-items: center;
+    padding: 8px;
+}
+[data-theme="pixel"] #playlist-ul li::before {
+    content: '-';
+    margin-right: 8px;
+    color: #aaa;
+}
+[data-theme="pixel"] #playlist-ul li:hover {
+    background: #000;
+    border: 1px dashed #fff;
+}
+[data-theme="pixel"] #playlist-ul li:hover::before {
+    content: '>';
+    color: #fff;
+}
+[data-theme="pixel"] #playlist-ul li.active {
+    color: #ffff00 !important;
+    text-shadow: 1px 1px 0px #000;
+}
+[data-theme="pixel"] #playlist-ul li.active::before {
+    content: '>';
+    color: #ffff00 !important;
+}
 
 [data-theme="pixel"] .popup-content {
-    background: #0000aa; border: 4px solid #fff; border-radius: 0 !important;
+    background: #0000aa;
+    border: 4px solid #fff;
+    border-radius: 0 !important;
     box-shadow: 8px 8px 0px #000;
 }
-[data-theme="pixel"] .popup-header h3, 
+[data-theme="pixel"] .popup-header h3 {
+    font-family: 'Press Start 2P', monospace !important;
+    font-size: 10px;
+    color: #fff;
+    text-shadow: 2px 2px 0px #000;
+}
 [data-theme="pixel"] .setting-row span {
     font-family: 'Press Start 2P', monospace !important;
-    font-size: 12px; color: #fff; text-shadow: 2px 2px 0px #000;
+    font-size: 8px !important;
+    color: #fff;
+    text-shadow: 1px 1px 0px #000;
 }
 
 [data-theme="pixel"] #playlist-ul li span {
-    font-size: 15px;
-    font-family: 'Press Start 2P', monospace;
+    font-size: 8px !important;
+    font-family: 'Press Start 2P', monospace !important;
     text-shadow: none;
-    font-weight: 800;
+    font-weight: normal;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 [data-theme="pixel"] .mode-btn {
-    background: #000; color: #fff; border: 2px solid #fff; border-radius: 0;
-    font-family: 'Press Start 2P', monospace; font-size: 9px; box-shadow: 2px 2px 0px #000;
+    background: #000;
+    color: #fff;
+    border: 2px solid #fff;
+    border-radius: 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    box-shadow: 2px 2px 0px #000;
+    padding: 6px 10px;
 }
-[data-theme="pixel"] .mode-btn.active { background: #fff; color: #000; box-shadow: inset 2px 2px 0px #888; border-color: #000; }
+[data-theme="pixel"] .mode-btn.active {
+    background: #fff;
+    color: #000;
+    box-shadow: inset 2px 2px 0px #888;
+    border-color: #000;
+}
 [data-theme="pixel"] #search-bar, 
 [data-theme="pixel"] select#theme-selector {
-    background: #000 !important; color: #fff !important; border: 2px solid #fff !important;
-    border-radius: 0 !important; font-family: 'Press Start 2P', monospace; font-size: 9px; padding: 10px;
+    background: #000 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    border-radius: 0 !important;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px;
+}
+[data-theme="pixel"] #search-bar:focus {
+    border-color: #ffff00 !important;
+    outline: none;
 }
 /* Switch Toggle Pixel */
-[data-theme="pixel"] .switch .slider { background: #000; border: 2px solid #fff; border-radius: 0; }
-[data-theme="pixel"] .switch .slider::before { background: #fff; border: 2px solid #000; border-radius: 0; height: 14px; width: 14px; left: 2px; bottom: 2px; }
-[data-theme="pixel"] .switch input:checked + .slider { background: #fff; border-color: #000; }
-[data-theme="pixel"] .switch input:checked + .slider::before { background: #000; border-color: #fff; }
+[data-theme="pixel"] .switch .slider {
+    background: #000;
+    border: 2px solid #fff;
+    border-radius: 0;
+}
+[data-theme="pixel"] .switch .slider::before {
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 0;
+    height: 14px;
+    width: 14px;
+    left: 2px;
+    bottom: 2px;
+}
+[data-theme="pixel"] .switch input:checked + .slider {
+    background: #fff;
+    border-color: #000;
+}
+[data-theme="pixel"] .switch input:checked + .slider::before {
+    background: #000;
+    border-color: #fff;
+}
 
 [data-theme="pixel"] .header-btn:hover {
     color: #7b7bff ;
+}
+
+/* Custom Overrides for camera & volume pop container in pixel theme */
+[data-theme="pixel"] .camera-btn {
+    border-radius: 0 !important;
+    background: #000 !important;
+    border: 2px solid #fff !important;
+    box-shadow: 2px 2px 0px #000;
+}
+[data-theme="pixel"] .volume-pop-container {
+    background: #000 !important;
+    border: 2px solid #fff !important;
+    border-radius: 0 !important;
+    box-shadow: 4px 4px 0px #000 !important;
+}
+[data-theme="pixel"] #volume-slider {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    background: transparent !important;
+    accent-color: transparent !important;
+}
+[data-theme="pixel"] #volume-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: #000;
+    border: 1px solid #fff;
+    border-radius: 0;
+}
+[data-theme="pixel"] #volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    height: 12px;
+    width: 8px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 0 !important;
+    margin-top: -4px;
+    cursor: pointer;
+}
+[data-theme="pixel"] .volume-pop-container span {
+    font-size: 8px !important;
+}
+[data-theme="pixel"] .progress-container span {
+    font-size: 8px !important;
+}
+[data-theme="pixel"] #song-artist {
+    font-size: 8px !important;
+}
+[data-theme="pixel"] #song-title {
+    font-size: 10px !important;
+}
+
+/* Overrides for YouTube search pop-up and search list items */
+[data-theme="pixel"] #yt-search-results li {
+    border-radius: 0 !important;
+    background: #000 !important;
+    border: 2px solid #fff !important;
+    box-shadow: 2px 2px 0px #000;
+}
+[data-theme="pixel"] #yt-search-results li:hover {
+    background: #222 !important;
+    border-color: #ffff00 !important;
+}
+[data-theme="pixel"] #yt-search-results li img {
+    border-radius: 0 !important;
+    border: 1px solid #fff;
+}
+[data-theme="pixel"] #yt-search-results li span {
+    font-size: 8px !important;
+    text-shadow: none !important;
+    font-family: 'Press Start 2P', monospace !important;
+}
+[data-theme="pixel"] .heart-btn {
+    font-size: 8px !important;
+    transition: none !important;
+}
+[data-theme="pixel"] .heart-btn:hover {
+    color: #ffff00 !important;
+}
+[data-theme="pixel"] .heart-btn.liked {
+    color: #ff0000 !important;
 }
 /* =========================================
    IMPORT CUSTOM FONTS (GOOGLE FONTS)

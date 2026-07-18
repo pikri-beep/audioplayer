@@ -739,5 +739,38 @@ if (ontopToggle) {
     });
 }
 
+// 11. SHORTCUT KEYBOARD LOKAL (Saat Jendela Aktif/Fokus)
+window.addEventListener('keydown', (e) => {
+    // Jangan jalankan shortcut jika user sedang mengetik di pencarian atau dropdown
+    if (document.activeElement && (
+        document.activeElement.tagName === 'INPUT' || 
+        document.activeElement.tagName === 'TEXTAREA' || 
+        document.activeElement.tagName === 'SELECT'
+    )) {
+        // Tombol Escape untuk melepas fokus dari kolom input pencarian agar shortcut bisa dipakai lagi
+        if (e.key === 'Escape') {
+            document.activeElement.blur();
+        }
+        return;
+    }
+
+    if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        adjustVolume(0.05); // Naikkan volume 5%
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        adjustVolume(-0.05); // Turunkan volume 5%
+    } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextSong(); // Lagu berikutnya
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSong(); // Lagu sebelumnya
+    } else if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        togglePlay(); // Play/Pause
+    }
+});
+
 // Inisialisasi awal
 loadPlaylist(true);
