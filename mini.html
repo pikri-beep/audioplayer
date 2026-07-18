@@ -82,11 +82,113 @@
         [data-theme="hacker"] h3, [data-theme="hacker"] p, [data-theme="hacker"] button { color: #00ff00; }
         [data-theme="hacker"] button:hover { color: #fff; text-shadow: 0 0 5px #00ff00; }
         [data-theme="hacker"] .cover-art { filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); border-radius: 0; border: 1px dashed #00ff00; }
+
+        /* TEMA COSMIC BUBBLE (Glassmorphism & Glow) */
+        [data-theme="cosmic"] .widget-container {
+            background: radial-gradient(circle at 50% 50%, #150630, #04010d) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 10px 30px rgba(182, 36, 255, 0.25) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="cosmic"] .cosmic-bg-bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        [data-theme="cosmic"] .bubble {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(15px);
+            opacity: 0.55;
+            animation: floatBubbleMini 12s infinite linear;
+        }
+
+        [data-theme="cosmic"] .bubble-1 {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.7) 0%, rgba(168, 85, 247, 0) 70%);
+            top: -20px;
+            left: -20px;
+            animation-duration: 8s;
+        }
+
+        [data-theme="cosmic"] .bubble-2 {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.6) 0%, rgba(0, 240, 255, 0) 70%);
+            bottom: -30px;
+            right: -30px;
+            animation-duration: 14s;
+            animation-delay: -3s;
+        }
+
+        [data-theme="cosmic"] .bubble-3 {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(255, 42, 133, 0.5) 0%, rgba(255, 42, 133, 0) 70%);
+            top: 20px;
+            right: 40px;
+            animation-duration: 10s;
+            animation-delay: -1s;
+        }
+
+        @keyframes floatBubbleMini {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(15px, -15px) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        /* Ensure texts and elements sit on top of background bubbles */
+        [data-theme="cosmic"] .cover-art,
+        [data-theme="cosmic"] .song-info,
+        [data-theme="cosmic"] .expand-btn {
+            position: relative;
+            z-index: 1;
+        }
+
+        [data-theme="cosmic"] .cover-art {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="cosmic"] h3 {
+            color: #ffffff !important;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
+        }
+
+        [data-theme="cosmic"] p {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        [data-theme="cosmic"] button {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: all 0.2s ease;
+        }
+
+        [data-theme="cosmic"] button:hover {
+            color: #00f0ff !important;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+            transform: scale(1.2) !important;
+        }
     </style>
 </head>
 <body>
 
     <div class="widget-container">
+        <!-- Gelembung Latar Belakang Cosmic -->
+        <div class="cosmic-bg-bubbles">
+            <div class="bubble bubble-1"></div>
+            <div class="bubble bubble-2"></div>
+            <div class="bubble bubble-3"></div>
+        </div>
         <img id="cover" class="cover-art" src="covers/default.png" alt="Cover">
         <div class="song-info">
             <h3 id="title">NJOY Player</h3>
