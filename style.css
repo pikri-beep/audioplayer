@@ -304,6 +304,28 @@ body {
     color: #ef4444;
 }
 
+.delete-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 14px;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.delete-btn:hover {
+    color: #ff4d4d;
+    transform: scale(1.15);
+}
+
+.confirm-text {
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
 /* Styling tombol kamera */
 .camera-btn {
     position: absolute;
@@ -829,6 +851,22 @@ body {
 }
 [data-theme="pixel"] .heart-btn.liked {
     color: #ff0000 !important;
+}
+
+[data-theme="pixel"] .delete-btn {
+    font-size: 8px !important;
+    color: #aaa !important;
+    transition: none !important;
+}
+
+[data-theme="pixel"] .delete-btn:hover {
+    color: #ff0000 !important;
+}
+
+[data-theme="pixel"] .confirm-text,
+[data-theme="minecraft"] .confirm-text {
+    font-size: 8px !important;
+    text-shadow: 1px 1px 0px #000;
 }
 /* =========================================
    IMPORT CUSTOM FONTS (GOOGLE FONTS)

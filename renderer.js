@@ -138,10 +138,127 @@ function renderPlaylist() {
             renderPlaylist();
         });
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        deleteBtn.title = 'Hapus Lagu';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSong(song);
+        });
+
         li.appendChild(span);
         li.appendChild(heartBtn);
+        li.appendChild(deleteBtn);
         playlistUl.appendChild(li);
     });
+}
+
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        const popup = document.getElementById('confirm-popup');
+        const titleEl = document.getElementById('confirm-title');
+        const messageEl = document.getElementById('confirm-message');
+        const yesBtn = document.getElementById('confirm-yes-btn');
+        const noBtn = document.getElementById('confirm-no-btn');
+        
+        titleEl.innerText = title;
+        messageEl.innerText = message;
+        
+        popup.classList.add('show');
+        
+        const newYesBtn = yesBtn.cloneNode(true);
+        const newNoBtn = noBtn.cloneNode(true);
+        yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+        noBtn.parentNode.replaceChild(newNoBtn, noBtn);
+        
+        newYesBtn.addEventListener('click', () => {
+            popup.classList.remove('show');
+            resolve(true);
+        });
+        
+        newNoBtn.addEventListener('click', () => {
+            popup.classList.remove('show');
+            resolve(false);
+        });
+    });
+}
+
+async function deleteSong(songName) {
+    const songCleanName = path.parse(songName).name;
+    const confirmed = await showCustomConfirm(
+        "Hapus Lagu?",
+        `Apakah Anda yakin ingin menghapus lagu "${songCleanName}"?`
+    );
+    if (!confirmed) return;
+    
+    try {
+        const filePath = path.join(songsFolder, songName);
+        
+        // 1. Hapus file audio dari disk
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
+        
+        // 2. Hapus file cover custom jika ada
+        const cleanName = path.parse(songName).name;
+        const coverPath = path.join(__dirname, 'covers', `${cleanName}-cover.jpg`);
+        if (fs.existsSync(coverPath)) {
+            try {
+                fs.unlinkSync(coverPath);
+            } catch (e) {
+                console.error("Gagal menghapus cover custom:", e.message);
+            }
+        }
+        
+        // 3. Hapus dari njoyList (Favorites) jika ada
+        if (njoyList.includes(songName)) {
+            njoyList = njoyList.filter(item => item !== songName);
+            localStorage.setItem('njoyList', JSON.stringify(njoyList));
+        }
+        
+        // 4. Perbarui status pemutaran
+        const deletedIndex = playlist.indexOf(songName);
+        
+        // Baca ulang daftar lagu dari folder
+        playlist = fs.readdirSync(songsFolder).filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return ['.mp3', '.wav', '.m4a', '.ogg'].includes(ext);
+        });
+        
+        if (playlist.length === 0) {
+            audio.pause();
+            audio.src = '';
+            currentSongIndex = 0;
+            songTitleEl.innerText = "Playlist Kosong";
+            songArtistEl.innerText = "Klik (+) untuk tambah mp3";
+            const albumArtImg = document.getElementById('album-art-img');
+            if (albumArtImg) albumArtImg.src = "file://" + path.join(__dirname, "covers", "default.png");
+            if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            renderPlaylist();
+            return;
+        }
+        
+        if (deletedIndex === currentSongIndex) {
+            let nextIndex = currentSongIndex;
+            if (nextIndex >= playlist.length) {
+                nextIndex = 0;
+            }
+            audio.pause();
+            loadSong(nextIndex);
+            audio.play().catch(err => console.log(err));
+            playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        } else {
+            if (deletedIndex < currentSongIndex) {
+                currentSongIndex--;
+            }
+            renderPlaylist();
+        }
+        
+    } catch (err) {
+        console.error("Gagal menghapus lagu:", err.message);
+        alert("Gagal menghapus lagu: " + err.message);
+    }
 }
 
 function loadSong(index) {
