@@ -89,3 +89,14 @@ window.player.uiController.initializeUiListeners();
 
 // Load Playlist awal
 window.player.playlistManager.loadPlaylist(true);
+
+// 4. Custom Window Controls kustom
+document.getElementById('win-min').addEventListener('click', () => {
+    ipcRenderer.send('window-minimize');
+});
+document.getElementById('win-max').addEventListener('click', () => {
+    ipcRenderer.send('window-maximize');
+});
+document.getElementById('win-close').addEventListener('click', () => {
+    ipcRenderer.send('window-close');
+});

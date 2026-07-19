@@ -64,6 +64,7 @@ function createWindow() {
         minWidth: 280,
         minHeight: 450,
         resizable: true,
+        frame: false, // frameless window kustom
         autoHideMenuBar: true,
         icon: path.join(__dirname, '../../assets', 'logo.png'),
         webPreferences: {

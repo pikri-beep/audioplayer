@@ -177,6 +177,29 @@ function registerIpcListeners() {
             state.win.setAlwaysOnTop(enabled);
         }
     });
+
+    // 9. Window Controls kustom untuk Frameless Window
+    ipcMain.on("window-minimize", () => {
+        if (state.win && !state.win.isDestroyed()) {
+            state.win.minimize();
+        }
+    });
+
+    ipcMain.on("window-maximize", () => {
+        if (state.win && !state.win.isDestroyed()) {
+            if (state.win.isMaximized()) {
+                state.win.unmaximize();
+            } else {
+                state.win.maximize();
+            }
+        }
+    });
+
+    ipcMain.on("window-close", () => {
+        if (state.win && !state.win.isDestroyed()) {
+            state.win.close();
+        }
+    });
 }
 
 module.exports = {
