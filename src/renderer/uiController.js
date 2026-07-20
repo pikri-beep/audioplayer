@@ -6,6 +6,7 @@ function initializeUiListeners() {
     const { 
         audio, playBtn, prevBtn, nextBtn, shuffleBtn, repeatBtn, progressBar,
         currentTimeEl, durationEl, songTitleEl, songArtistEl, playlistUl,
+        playlistPopup, playlistToggleBtn, closePopupBtn,
         addMenuBtn, addDropdown, importFileBtn, importYtBtn, miniPlayerBtn,
         volumeSlider, volumeText, volumeIcon, lyricsToggleBtn, lyricsPopup,
         closeLyricsBtn, uploadCoverBtn
@@ -109,11 +110,22 @@ function initializeUiListeners() {
     if (lyricsToggleBtn) lyricsToggleBtn.addEventListener('click', () => lyricsPopup.classList.add('show'));
     if (closeLyricsBtn) closeLyricsBtn.addEventListener('click', () => lyricsPopup.classList.remove('show'));
 
-    const playlistPopup = document.getElementById('playlist-popup');
-    const playlistToggleBtn = document.getElementById('playlist-toggle-btn');
-    const closePopupBtn = document.getElementById('close-popup-btn');
     if (playlistToggleBtn) playlistToggleBtn.addEventListener('click', () => playlistPopup.classList.add('show'));
     if (closePopupBtn) closePopupBtn.addEventListener('click', () => playlistPopup.classList.remove('show'));
+
+    // Backdrop click handlers to dismiss popups on backdrop click
+    const ytPopup = window.player.dom.ytPopup || document.getElementById('yt-popup');
+    const confirmPopup = document.getElementById('confirm-popup');
+    
+    [playlistPopup, lyricsPopup, ytPopup, confirmPopup].forEach(popup => {
+        if (popup) {
+            popup.addEventListener('click', (e) => {
+                if (e.target === popup) {
+                    popup.classList.remove('show');
+                }
+            });
+        }
+    });
 
     // Mode tabs (All / Favorites)
     const btnModeAll = document.getElementById('btn-mode-all');

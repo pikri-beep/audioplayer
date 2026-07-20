@@ -114,10 +114,13 @@ function updatePaginationControls() {
 }
 
 function initializeDownloadListeners() {
-    const { ytDownloadBtn, ytPopup, closeYtBtn, ytSearchResults, ytStatusText, startYtDlBtn, ytUrlInput } = window.player.dom;
+    const { importYtBtn, ytDownloadBtn, ytPopup, closeYtBtn, ytSearchResults, ytStatusText, startYtDlBtn, ytUrlInput } = window.player.dom;
     
-    if (ytDownloadBtn) {
-        ytDownloadBtn.addEventListener('click', () => { 
+    const openYtBtn = importYtBtn || ytDownloadBtn;
+    if (openYtBtn) {
+        openYtBtn.addEventListener('click', () => { 
+            const addDropdown = document.getElementById('add-dropdown');
+            if (addDropdown) addDropdown.classList.remove('show');
             ytPopup.classList.add('show'); 
         });
     }
