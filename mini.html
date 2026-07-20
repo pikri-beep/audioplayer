@@ -202,6 +202,80 @@
             text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
             transform: scale(1.2) !important;
         }
+
+        /* TEMA DISCO FLOOR MINI */
+        .disco-floor-bg-mini {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+            border-radius: 20px;
+        }
+
+        [data-theme="disco"] .disco-floor-bg-mini {
+            display: block !important;
+        }
+
+        @keyframes discoFloorScrollMini {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 40px; }
+        }
+
+        .disco-dance-floor-mini {
+            position: absolute;
+            bottom: -55%;
+            left: -20%;
+            width: 140%;
+            height: 130%;
+            background-image: 
+                linear-gradient(90deg, rgba(255, 0, 127, 0.55) 2px, transparent 2px),
+                linear-gradient(0deg, rgba(0, 243, 255, 0.55) 2px, transparent 2px);
+            background-size: 40px 40px;
+            transform: perspective(250px) rotateX(62deg);
+            animation: discoFloorScrollMini 2s linear infinite, discoFloorPulse 5s ease-in-out infinite;
+            mask-image: linear-gradient(to top, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0) 100%);
+            -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0) 100%);
+        }
+
+        [data-theme="disco"] .widget-container {
+            background: linear-gradient(135deg, rgba(15, 3, 30, 0.95), rgba(5, 0, 15, 0.95)) !important;
+            border: 2px solid #ff007f !important;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 45px rgba(0, 243, 255, 0.3) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="disco"] h3 {
+            color: #ffea00 !important;
+            font-family: 'Bangers', cursive !important;
+            font-size: 16px !important;
+            text-shadow: 0 0 8px #ffea00, 0 0 15px #ff007f !important;
+        }
+
+        [data-theme="disco"] p#artist {
+            color: #00f3ff !important;
+            font-weight: 600;
+        }
+
+        [data-theme="disco"] .mini-lyric {
+            color: #ffea00 !important;
+            text-shadow: 0 0 8px #ffea00, 0 0 15px #ff007f !important;
+        }
+
+        [data-theme="disco"] button {
+            color: #ffea00 !important;
+        }
+
+        [data-theme="disco"] button:hover {
+            color: #00f3ff !important;
+            text-shadow: 0 0 10px #00f3ff;
+            transform: scale(1.2) !important;
+        }
     </style>
 </head>
 <body>
@@ -212,6 +286,11 @@
             <div class="bubble bubble-1"></div>
             <div class="bubble bubble-2"></div>
             <div class="bubble bubble-3"></div>
+        </div>
+
+        <!-- Latar Belakang Disco Dance Floor Mini -->
+        <div class="disco-floor-bg-mini">
+            <div class="disco-dance-floor-mini"></div>
         </div>
         <img id="cover" class="cover-art" src="covers/default.png" alt="Cover">
         <div class="song-info">
