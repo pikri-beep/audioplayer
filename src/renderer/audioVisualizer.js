@@ -24,7 +24,7 @@ function initAudioVisualizer() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
-            analyser.smoothingTimeConstant = 0.88; // Extra smooth, fluid movement
+            analyser.smoothingTimeConstant = 0.90; // Super smooth & fluid
 
             sourceNode = audioCtx.createMediaElementSource(audio);
             sourceNode.connect(analyser);
@@ -57,7 +57,6 @@ function initAudioVisualizer() {
 
         // Get computed theme glow color
         const themeGlow = getComputedStyle(document.documentElement).getPropertyValue('--theme-glow').trim() || '#00f3ff';
-        const themeBorder = getComputedStyle(document.documentElement).getPropertyValue('--theme-border').trim() || 'rgba(0, 243, 255, 0.4)';
 
         if (!analyser || (audio && audio.paused)) {
             // Draw calm breathing idle wave
@@ -66,38 +65,16 @@ function initAudioVisualizer() {
         }
 
         const bufferLength = analyser.frequencyBinCount;
-        const freqData = new Uint8Array(bufferLength);
         const timeData = new Uint8Array(bufferLength);
-
-        analyser.getByteFrequencyData(freqData);
         analyser.getByteTimeDomainData(timeData);
 
-        // 1. Draw Subtle Ambient Spectrum Bars (Bottom)
-        const barWidth = (width / bufferLength) * 1.5;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            // Max height is 12% of screen - calm & non-distracting
-            const barHeight = (freqData[i] / 255) * (height * 0.12);
-
-            const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
-            gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-            gradient.addColorStop(0.5, themeBorder);
-            gradient.addColorStop(1, themeGlow);
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(x, height - barHeight, barWidth - 2, barHeight);
-
-            x += barWidth;
-        }
-
-        // 2. Draw Smooth & Calm Oscilloscope Wave Line (Bottom Area)
+        // Draw Clean & Smooth Audio Wave Line (Bottom Area)
         ctx.beginPath();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.strokeStyle = themeGlow;
         ctx.shadowColor = themeGlow;
         ctx.shadowBlur = 8;
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.65;
 
         const sliceWidth = width / bufferLength;
         let waveX = 0;
