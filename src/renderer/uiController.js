@@ -301,6 +301,21 @@ function initializeUiListeners() {
         });
     }
 
+    const waveToggle = document.getElementById('wave-toggle');
+    const waveCanvas = document.getElementById('audio-wave-canvas');
+    if (waveToggle) {
+        const savedWave = localStorage.getItem('njoy_wave');
+        const waveEnabled = savedWave !== null ? savedWave === 'true' : true;
+        waveToggle.checked = waveEnabled;
+        if (waveCanvas) waveCanvas.style.display = waveEnabled ? 'block' : 'none';
+        
+        waveToggle.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            localStorage.setItem('njoy_wave', enabled);
+            if (waveCanvas) waveCanvas.style.display = enabled ? 'block' : 'none';
+        });
+    }
+
     if (ontopToggle) {
         const savedOntop = localStorage.getItem('njoy_ontop');
         const ontopEnabled = savedOntop !== null ? savedOntop === 'true' : false;

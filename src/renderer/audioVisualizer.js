@@ -24,7 +24,7 @@ function initAudioVisualizer() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
-            analyser.smoothingTimeConstant = 0.8;
+            analyser.smoothingTimeConstant = 0.88; // Extra smooth, fluid movement
 
             sourceNode = audioCtx.createMediaElementSource(audio);
             sourceNode.connect(analyser);
@@ -48,6 +48,9 @@ function initAudioVisualizer() {
     function draw() {
         animationFrameId = requestAnimationFrame(draw);
 
+        // Don't calculate or render if canvas is hidden by user setting
+        if (canvas.style.display === 'none') return;
+
         const width = canvas.width;
         const height = canvas.height;
         ctx.clearRect(0, 0, width, height);
@@ -57,7 +60,7 @@ function initAudioVisualizer() {
         const themeBorder = getComputedStyle(document.documentElement).getPropertyValue('--theme-border').trim() || 'rgba(0, 243, 255, 0.4)';
 
         if (!analyser || (audio && audio.paused)) {
-            // Draw idle gentle breathing wave
+            // Draw calm breathing idle wave
             drawIdleWave(ctx, width, height, themeGlow);
             return;
         }
@@ -69,12 +72,13 @@ function initAudioVisualizer() {
         analyser.getByteFrequencyData(freqData);
         analyser.getByteTimeDomainData(timeData);
 
-        // 1. Draw Spectrum Bar Wave (Bottom)
+        // 1. Draw Subtle Ambient Spectrum Bars (Bottom)
         const barWidth = (width / bufferLength) * 1.5;
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
-            const barHeight = (freqData[i] / 255) * (height * 0.35);
+            // Max height is 12% of screen - calm & non-distracting
+            const barHeight = (freqData[i] / 255) * (height * 0.12);
 
             const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
             gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
@@ -87,19 +91,21 @@ function initAudioVisualizer() {
             x += barWidth;
         }
 
-        // 2. Draw Smooth Neon Oscilloscope Wave Line (Center-Bottom)
+        // 2. Draw Smooth & Calm Oscilloscope Wave Line (Bottom Area)
         ctx.beginPath();
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = themeGlow;
         ctx.shadowColor = themeGlow;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 8;
+        ctx.globalAlpha = 0.6;
 
         const sliceWidth = width / bufferLength;
         let waveX = 0;
+        const centerY = height * 0.82;
 
         for (let i = 0; i < bufferLength; i++) {
-            const v = timeData[i] / 128.0; // 0.0 to 2.0
-            const y = (v * (height * 0.22)) + (height * 0.65);
+            const v = (timeData[i] - 128) / 128.0; // -1.0 to +1.0
+            const y = centerY + (v * (height * 0.08)); // Max 8% height deviation
 
             if (i === 0) {
                 ctx.moveTo(waveX, y);
@@ -110,24 +116,24 @@ function initAudioVisualizer() {
             waveX += sliceWidth;
         }
 
-        ctx.lineTo(width, height * 0.75);
         ctx.stroke();
-        ctx.shadowBlur = 0; // Reset shadow for performance
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
     }
 
     let idleTime = 0;
     function drawIdleWave(ctx, width, height, themeGlow) {
-        idleTime += 0.03;
+        idleTime += 0.015; // Slow, serene breathing wave speed
         ctx.beginPath();
         ctx.lineWidth = 2;
         ctx.strokeStyle = themeGlow;
         ctx.shadowColor = themeGlow;
-        ctx.shadowBlur = 8;
-        ctx.globalAlpha = 0.35;
+        ctx.shadowBlur = 6;
+        ctx.globalAlpha = 0.3;
 
-        const centerY = height * 0.75;
+        const centerY = height * 0.82;
         for (let x = 0; x < width; x += 10) {
-            const y = centerY + Math.sin(x * 0.01 + idleTime) * 8;
+            const y = centerY + Math.sin(x * 0.008 + idleTime) * 5;
             if (x === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         }
