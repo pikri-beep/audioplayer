@@ -1976,4 +1976,180 @@ body {
 [data-theme="cosmic"] ::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 240, 255, 0.5) !important;
 }
+
+/* ==========================================================================
+   TEMA DISCO PARTY (Neon & Pulsating Lights)
+   ========================================================================== */
+
+@keyframes discoSpotlight {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes discoBorderGlow {
+    0% {
+        border-color: #ff007f !important;
+        box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 50px rgba(0, 243, 255, 0.3) !important;
+    }
+    33% {
+        border-color: #00f3ff !important;
+        box-shadow: 0 0 25px rgba(0, 243, 255, 0.5), 0 0 50px rgba(255, 238, 0, 0.3) !important;
+    }
+    66% {
+        border-color: #ffea00 !important;
+        box-shadow: 0 0 25px rgba(255, 238, 0, 0.5), 0 0 50px rgba(157, 0, 255, 0.3) !important;
+    }
+    100% {
+        border-color: #ff007f !important;
+        box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 50px rgba(0, 243, 255, 0.3) !important;
+    }
+}
+
+/* Background & Body */
+body[data-theme="disco"] {
+    background: linear-gradient(135deg, #0f021e, #1a0033, #050014, #26002e) !important;
+    background-size: 400% 400% !important;
+    animation: discoSpotlight 10s ease infinite !important;
+    color: #ffffff !important;
+}
+
+/* Main Container */
+[data-theme="disco"] .player-container {
+    background: rgba(18, 5, 36, 0.88) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 2px solid #ff007f !important;
+    border-radius: 24px !important;
+    animation: discoBorderGlow 6s infinite ease-in-out !important;
+}
+
+/* Album Art */
+[data-theme="disco"] .album-art {
+    border: 3px solid #00f3ff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.6), 0 0 50px rgba(255, 0, 127, 0.4) !important;
+    background: #090114 !important;
+}
+
+[data-theme="disco"] #album-art-img {
+    border-radius: 18px !important;
+    box-shadow: 0 0 20px rgba(255, 238, 0, 0.4) !important;
+}
+
+/* Song Info & Typography */
+[data-theme="disco"] #song-title {
+    font-family: 'Bangers', 'Segoe UI', sans-serif !important;
+    font-size: 24px !important;
+    color: #ffea00 !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 0 10px #ffea00, 0 0 20px #ff007f, 2px 2px 0px #000 !important;
+}
+
+[data-theme="disco"] #song-artist {
+    color: #00f3ff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.6) !important;
+}
+
+/* Buttons */
+[data-theme="disco"] .btn-secondary {
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 243, 255, 0.2)) !important;
+    border: 1px solid rgba(255, 238, 0, 0.4) !important;
+    color: #ffea00 !important;
+    box-shadow: 0 0 12px rgba(255, 0, 127, 0.4) !important;
+    border-radius: 50% !important;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+}
+
+[data-theme="disco"] .btn-main {
+    background: linear-gradient(135deg, #ff007f, #7928ca, #00f3ff) !important;
+    background-size: 200% 200% !important;
+    animation: discoSpotlight 6s ease infinite !important;
+    border: 2px solid #ffea00 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 25px rgba(255, 0, 127, 0.7), 0 0 40px rgba(0, 243, 255, 0.5) !important;
+    border-radius: 50% !important;
+    transition: all 0.25s ease !important;
+}
+
+[data-theme="disco"] .btn-secondary:hover {
+    transform: scale(1.18) rotate(5deg) !important;
+    background: linear-gradient(135deg, #ff007f, #00f3ff) !important;
+    color: #ffffff !important;
+    border-color: #00f3ff !important;
+    box-shadow: 0 0 20px #00f3ff, 0 0 30px #ff007f !important;
+}
+
+[data-theme="disco"] .btn-main:hover {
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px #ffea00, 0 0 50px #ff007f !important;
+}
+
+/* Modals & Popups */
+[data-theme="disco"] .popup-content {
+    background: rgba(18, 5, 36, 0.95) !important;
+    border: 2px solid #ff007f !important;
+    box-shadow: 0 0 30px rgba(255, 0, 127, 0.5), 0 0 60px rgba(0, 243, 255, 0.3) !important;
+    border-radius: 20px !important;
+}
+
+[data-theme="disco"] #playlist-ul li {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 0, 127, 0.2) !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-theme="disco"] #playlist-ul li:hover {
+    background: linear-gradient(90deg, rgba(255,0,127,0.2), rgba(0,243,255,0.2)) !important;
+    border-color: #00f3ff !important;
+    transform: translateX(4px) !important;
+}
+
+[data-theme="disco"] #playlist-ul li.active {
+    background: linear-gradient(90deg, rgba(255,0,127,0.35), rgba(0,243,255,0.35)) !important;
+    border-color: #ffea00 !important;
+    color: #ffea00 !important;
+    font-weight: bold !important;
+    box-shadow: 0 0 20px rgba(255, 238, 0, 0.4) !important;
+}
+
+[data-theme="disco"] .mode-btn.active {
+    background: linear-gradient(135deg, #ff007f, #00f3ff) !important;
+    color: #ffffff !important;
+    border: 1px solid #ffea00 !important;
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.6) !important;
+}
+
+[data-theme="disco"] .lyric-line.active {
+    color: #ffea00 !important;
+    text-shadow: 0 0 12px #ffea00, 0 0 25px #ff007f !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    transform: scale(1.05) !important;
+}
+
+/* Progress & Sliders */
+[data-theme="disco"] #progress-bar,
+[data-theme="disco"] #volume-slider {
+    accent-color: #ff007f !important;
+}
+
+[data-theme="disco"] ::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 127, 0.5) !important;
+    border-radius: 10px !important;
+}
+
+[data-theme="disco"] ::-webkit-scrollbar-thumb:hover {
+    background: #00f3ff !important;
+    box-shadow: 0 0 10px #00f3ff !important;
+}
 
