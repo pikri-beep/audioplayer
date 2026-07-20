@@ -82,6 +82,7 @@ require('./src/renderer/playlistManager');
 require('./src/renderer/audioController');
 require('./src/renderer/lyricsService');
 require('./src/renderer/downloadController');
+require('./src/renderer/audioVisualizer');
 require('./src/renderer/uiController');
 
 // 3. Inisialisasi UI Event Listeners & Load Playlist Awal

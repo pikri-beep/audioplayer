@@ -110,6 +110,23 @@
             box-sizing: border-box;
         }
 
+        /* Canvas Visualizer Gelombang Audio Background */
+        .audio-wave-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.85;
+        }
+
+        .player-container {
+            position: relative;
+            z-index: 10;
+        }
+
         /* Download Badge & Manager Styles */
         .download-badge {
             position: absolute;
@@ -250,11 +267,8 @@
         <div class="bubble bubble-4"></div>
     </div>
 
-    <!-- Latar Belakang Disco Dance Floor (Hanya aktif saat tema disco terpilih) -->
-    <div class="disco-floor-bg">
-        <div class="disco-ball-beam"></div>
-        <div class="disco-dance-floor"></div>
-    </div>
+    <!-- Canvas Visualizer Gelombang Audio Latar Belakang -->
+    <canvas id="audio-wave-canvas" class="audio-wave-canvas"></canvas>
 
     <div class="player-container">
         <div class="song-info">

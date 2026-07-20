@@ -1978,155 +1978,93 @@ body {
 }
 
 /* ==========================================================================
-   TEMA DISCO FLOOR (Lantai Dance Floor 3D & Disco Ball Neon)
+   TEMA DISCO PARTY (Neon & Pulsating Lights)
    ========================================================================== */
 
-/* Show Disco Floor only when data-theme="disco" */
-.disco-floor-bg {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    pointer-events: none;
-    z-index: 0;
-    overflow: hidden;
-}
-
-[data-theme="disco"] .disco-floor-bg {
-    display: block !important;
-}
-
-@keyframes discoFloorScroll {
+@keyframes discoSpotlight {
     0% {
-        background-position: 0 0;
-    }
-    100% {
-        background-position: 0 60px;
-    }
-}
-
-@keyframes discoFloorPulse {
-    0% {
-        filter: drop-shadow(0 0 15px rgba(255, 0, 127, 0.8)) hue-rotate(0deg);
+        background-position: 0% 50%;
     }
     50% {
-        filter: drop-shadow(0 0 25px rgba(0, 243, 255, 0.9)) hue-rotate(180deg);
+        background-position: 100% 50%;
     }
     100% {
-        filter: drop-shadow(0 0 15px rgba(255, 0, 127, 0.8)) hue-rotate(360deg);
+        background-position: 0% 50%;
     }
 }
 
-@keyframes discoBallSpin {
+@keyframes discoBorderGlow {
     0% {
-        transform: translateX(-50%) rotate(0deg) scale(1);
+        border-color: #ff007f !important;
+        box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 50px rgba(0, 243, 255, 0.3) !important;
     }
-    50% {
-        transform: translateX(-50%) rotate(180deg) scale(1.15);
+    33% {
+        border-color: #00f3ff !important;
+        box-shadow: 0 0 25px rgba(0, 243, 255, 0.5), 0 0 50px rgba(255, 238, 0, 0.3) !important;
+    }
+    66% {
+        border-color: #ffea00 !important;
+        box-shadow: 0 0 25px rgba(255, 238, 0, 0.5), 0 0 50px rgba(157, 0, 255, 0.3) !important;
     }
     100% {
-        transform: translateX(-50%) rotate(360deg) scale(1);
+        border-color: #ff007f !important;
+        box-shadow: 0 0 25px rgba(255, 0, 127, 0.5), 0 0 50px rgba(0, 243, 255, 0.3) !important;
     }
-}
-
-.disco-ball-beam {
-    position: absolute;
-    top: -80px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 450px;
-    height: 450px;
-    background: conic-gradient(
-        from 0deg,
-        rgba(255, 0, 127, 0.3),
-        rgba(0, 243, 255, 0.3),
-        rgba(255, 238, 0, 0.3),
-        rgba(157, 0, 255, 0.3),
-        rgba(255, 0, 127, 0.3)
-    );
-    border-radius: 50%;
-    filter: blur(35px);
-    animation: discoBallSpin 12s linear infinite;
-}
-
-.disco-dance-floor {
-    position: absolute;
-    bottom: -35%;
-    left: -30%;
-    width: 160%;
-    height: 80%;
-    background-image: 
-        linear-gradient(90deg, rgba(255, 0, 127, 0.65) 3px, transparent 3px),
-        linear-gradient(0deg, rgba(0, 243, 255, 0.65) 3px, transparent 3px),
-        radial-gradient(circle at 50% 50%, rgba(255, 238, 0, 0.15), transparent 70%);
-    background-size: 60px 60px;
-    transform: perspective(350px) rotateX(68deg);
-    animation: discoFloorScroll 2s linear infinite, discoFloorPulse 6s ease-in-out infinite;
-    mask-image: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
-    -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 100%);
 }
 
 /* Background & Body */
 body[data-theme="disco"] {
-    background: #06010f !important;
+    background: linear-gradient(135deg, #0f021e, #1a0033, #050014, #26002e) !important;
+    background-size: 400% 400% !important;
+    animation: discoSpotlight 10s ease infinite !important;
     color: #ffffff !important;
 }
 
 /* Main Container */
 [data-theme="disco"] .player-container {
-    position: relative;
-    z-index: 1;
-    background: rgba(15, 3, 30, 0.82) !important;
-    backdrop-filter: blur(25px) !important;
-    -webkit-backdrop-filter: blur(25px) !important;
+    background: rgba(18, 5, 36, 0.88) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
     border: 2px solid #ff007f !important;
     border-radius: 24px !important;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 
-                0 0 30px rgba(255, 0, 127, 0.5), 
-                0 0 60px rgba(0, 243, 255, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
     animation: discoBorderGlow 6s infinite ease-in-out !important;
 }
 
-/* Album Art - Disco Vinyl effect */
+/* Album Art */
 [data-theme="disco"] .album-art {
     border: 3px solid #00f3ff !important;
-    border-radius: 50% !important;
-    box-shadow: 0 0 30px rgba(0, 243, 255, 0.7), 0 0 60px rgba(255, 0, 127, 0.5) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 0 25px rgba(0, 243, 255, 0.6), 0 0 50px rgba(255, 0, 127, 0.4) !important;
     background: #090114 !important;
-    overflow: hidden;
 }
 
 [data-theme="disco"] #album-art-img {
-    border-radius: 50% !important;
-    box-shadow: 0 0 25px rgba(255, 238, 0, 0.5) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 0 20px rgba(255, 238, 0, 0.4) !important;
 }
 
 /* Song Info & Typography */
 [data-theme="disco"] #song-title {
     font-family: 'Bangers', 'Segoe UI', sans-serif !important;
-    font-size: 26px !important;
+    font-size: 24px !important;
     color: #ffea00 !important;
-    letter-spacing: 1.5px !important;
-    text-shadow: 0 0 10px #ffea00, 0 0 20px #ff007f, 3px 3px 0px #000 !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 0 10px #ffea00, 0 0 20px #ff007f, 2px 2px 0px #000 !important;
 }
 
 [data-theme="disco"] #song-artist {
     color: #00f3ff !important;
     font-size: 13px !important;
-    font-weight: 700 !important;
-    text-shadow: 0 0 10px rgba(0, 243, 255, 0.7) !important;
-    letter-spacing: 0.5px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(0, 243, 255, 0.6) !important;
 }
 
 /* Buttons */
 [data-theme="disco"] .btn-secondary {
-    background: linear-gradient(135deg, rgba(255, 0, 127, 0.25), rgba(0, 243, 255, 0.25)) !important;
-    border: 1.5px solid #ffea00 !important;
+    background: linear-gradient(135deg, rgba(255, 0, 127, 0.2), rgba(0, 243, 255, 0.2)) !important;
+    border: 1px solid rgba(255, 238, 0, 0.4) !important;
     color: #ffea00 !important;
-    box-shadow: 0 0 15px rgba(255, 0, 127, 0.5) !important;
+    box-shadow: 0 0 12px rgba(255, 0, 127, 0.4) !important;
     border-radius: 50% !important;
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
@@ -2137,22 +2075,22 @@ body[data-theme="disco"] {
     animation: discoSpotlight 6s ease infinite !important;
     border: 2px solid #ffea00 !important;
     color: #ffffff !important;
-    box-shadow: 0 0 30px rgba(255, 0, 127, 0.8), 0 0 50px rgba(0, 243, 255, 0.6) !important;
+    box-shadow: 0 0 25px rgba(255, 0, 127, 0.7), 0 0 40px rgba(0, 243, 255, 0.5) !important;
     border-radius: 50% !important;
     transition: all 0.25s ease !important;
 }
 
 [data-theme="disco"] .btn-secondary:hover {
-    transform: scale(1.2) rotate(6deg) !important;
+    transform: scale(1.18) rotate(5deg) !important;
     background: linear-gradient(135deg, #ff007f, #00f3ff) !important;
     color: #ffffff !important;
     border-color: #00f3ff !important;
-    box-shadow: 0 0 25px #00f3ff, 0 0 35px #ff007f !important;
+    box-shadow: 0 0 20px #00f3ff, 0 0 30px #ff007f !important;
 }
 
 [data-theme="disco"] .btn-main:hover {
-    transform: scale(1.15) !important;
-    box-shadow: 0 0 40px #ffea00, 0 0 60px #ff007f !important;
+    transform: scale(1.12) !important;
+    box-shadow: 0 0 35px #ffea00, 0 0 50px #ff007f !important;
 }
 
 /* Modals & Popups */
