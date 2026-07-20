@@ -69,7 +69,8 @@ window.player = {
         lyricsFetchCount: 0,
         searchResults: [],
         searchCurrentPage: 1,
-        searchResultsPerPage: 5
+        searchResultsPerPage: 5,
+        downloads: []
     }
 };
 

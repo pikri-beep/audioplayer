@@ -42,15 +42,40 @@ function renderSearchResultsPage() {
             </button>
         `;
         
-        const handleDownload = async (e) => {
+        const handleDownload = (e) => {
             e.stopPropagation();
-            const { ytStatusText } = window.player.dom;
-            ytSearchResults.innerHTML = '';
-            document.getElementById('yt-pagination').style.display = 'none';
-            ytStatusText.style.display = 'block';
-            ytStatusText.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload <b>${video.title}</b>...`;
-            const result = await ipcRenderer.invoke('download-yt', video.url);
-            handleDownloadResult(result);
+            
+            const downloadId = `dl-${Date.now()}`;
+            const newDownload = {
+                id: downloadId,
+                url: video.url,
+                title: video.title,
+                status: 'downloading'
+            };
+            
+            window.player.state.downloads.push(newDownload);
+            updateDownloadBadge();
+            renderDownloadManager();
+            
+            // Buka popup download manager
+            const dlPopup = document.getElementById('download-manager-popup');
+            if (dlPopup) dlPopup.classList.add('show');
+            
+            // Jalankan download secara asinkron (non-blocking)
+            ipcRenderer.invoke('download-yt', video.url).then(result => {
+                if (result.success) {
+                    newDownload.status = 'success';
+                    window.player.playlistManager.loadPlaylist(); // Reload playlist
+                } else {
+                    newDownload.status = 'failed';
+                }
+                renderDownloadManager();
+                updateDownloadBadge();
+            }).catch(err => {
+                newDownload.status = 'failed';
+                renderDownloadManager();
+                updateDownloadBadge();
+            });
         };
         
         li.addEventListener('click', handleDownload);
@@ -113,23 +138,47 @@ function initializeDownloadListeners() {
             const query = ytUrlInput.value.trim();
             if (!query) return alert("Ketik judul lagu atau paste link bang!");
 
-            ytSearchResults.innerHTML = '';
-            document.getElementById('yt-pagination').style.display = 'none';
-            ytStatusText.style.display = 'block';
-
             const isSpotify = /open\.spotify\.com/i.test(query);
             const isYouTube = /(youtube\.com|youtu\.be)/i.test(query);
 
-            if (isSpotify) {
-                ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mengekstraksi dari Spotify...';
-                const result = await ipcRenderer.invoke('download-spotify', query);
-                handleDownloadResult(result);
-            } else if (isYouTube) {
-                ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload dari YouTube...';
-                const result = await ipcRenderer.invoke('download-yt', query);
-                handleDownloadResult(result);
+            if (isSpotify || isYouTube) {
+                const downloadId = `dl-${Date.now()}`;
+                const newDownload = {
+                    id: downloadId,
+                    url: query,
+                    title: isSpotify ? "Spotify Link" : "YouTube Link",
+                    status: 'downloading'
+                };
+                
+                window.player.state.downloads.push(newDownload);
+                updateDownloadBadge();
+                renderDownloadManager();
+                
+                ytUrlInput.value = '';
+                const dlPopup = document.getElementById('download-manager-popup');
+                if (dlPopup) dlPopup.classList.add('show');
+                
+                const ipcChannel = isSpotify ? 'download-spotify' : 'download-yt';
+                ipcRenderer.invoke(ipcChannel, query).then(result => {
+                    if (result.success) {
+                        newDownload.status = 'success';
+                        window.player.playlistManager.loadPlaylist();
+                    } else {
+                        newDownload.status = 'failed';
+                    }
+                    renderDownloadManager();
+                    updateDownloadBadge();
+                }).catch(err => {
+                    newDownload.status = 'failed';
+                    renderDownloadManager();
+                    updateDownloadBadge();
+                });
             } else {
+                ytSearchResults.innerHTML = '';
+                document.getElementById('yt-pagination').style.display = 'none';
+                ytStatusText.style.display = 'block';
                 ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mencari...';
+                
                 const results = await ipcRenderer.invoke('search-yt', query);
                 ytStatusText.style.display = 'none';
 
@@ -139,11 +188,8 @@ function initializeDownloadListeners() {
                     return;
                 }
 
-                // Simpan ke state
                 window.player.state.searchResults = results;
                 window.player.state.searchCurrentPage = 1;
-                
-                // Render halaman pertama
                 renderSearchResultsPage();
             }
         });
@@ -173,10 +219,59 @@ function initializeDownloadListeners() {
     }
 }
 
+function renderDownloadManager() {
+    const container = document.getElementById('download-list-container');
+    if (!container) return;
+    
+    const { downloads } = window.player.state;
+    if (downloads.length === 0) {
+        container.innerHTML = '<div class="dl-empty-msg">Tidak ada unduhan aktif</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    downloads.forEach(dl => {
+        const div = document.createElement('div');
+        div.className = 'dl-item';
+        
+        let statusHtml = '';
+        if (dl.status === 'downloading') {
+            statusHtml = `<span class="dl-item-status"><i class="fa-solid fa-circle-notch fa-spin"></i> Mendownload...</span>`;
+        } else if (dl.status === 'success') {
+            statusHtml = `<span class="dl-item-status success"><i class="fa-solid fa-check"></i> Selesai</span>`;
+        } else {
+            statusHtml = `<span class="dl-item-status failed"><i class="fa-solid fa-xmark"></i> Gagal</span>`;
+        }
+        
+        div.innerHTML = `
+            <div class="dl-item-info">
+                <div class="dl-item-title" title="${dl.title}">${dl.title}</div>
+                ${statusHtml}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function updateDownloadBadge() {
+    const badge = document.getElementById('download-badge');
+    if (!badge) return;
+    
+    const activeCount = window.player.state.downloads.filter(dl => dl.status === 'downloading').length;
+    if (activeCount > 0) {
+        badge.innerText = activeCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
 // Daftarkan ke Global Registry
 window.player.downloadController = {
     handleDownloadResult,
     renderSearchResultsPage,
     updatePaginationControls,
-    initializeDownloadListeners
+    initializeDownloadListeners,
+    renderDownloadManager,
+    updateDownloadBadge
 };

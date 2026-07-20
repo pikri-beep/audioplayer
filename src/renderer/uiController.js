@@ -48,6 +48,9 @@ function initializeUiListeners() {
                         newEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                     window.player.state.currentLyricIndex = activeIndex;
+                    if (window.player.audio && window.player.audio.syncToMiniPlayer) {
+                        window.player.audio.syncToMiniPlayer();
+                    }
                 }
             }
         });
@@ -299,7 +302,44 @@ function initializeUiListeners() {
         });
     }
 
-    // 5. Keyboard shortcuts local listeners (Focus)
+    // 5. Download Manager UI toggles
+    const titleDlBtn = document.getElementById('title-download-btn');
+    const dlPopup = document.getElementById('download-manager-popup');
+    const closeDlPopupBtn = document.getElementById('close-dl-popup-btn');
+
+    if (titleDlBtn && dlPopup) {
+        titleDlBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dlPopup.classList.toggle('show');
+        });
+    }
+
+    if (closeDlPopupBtn && dlPopup) {
+        closeDlPopupBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dlPopup.classList.remove('show');
+        });
+    }
+
+    // Close download manager popup when clicking outside
+    document.addEventListener('click', (e) => {
+        if (dlPopup && dlPopup.classList.contains('show')) {
+            if (!dlPopup.contains(e.target) && e.target !== titleDlBtn && !titleDlBtn.contains(e.target)) {
+                dlPopup.classList.remove('show');
+            }
+        }
+    });
+
+    // 6. IPC Download Metadata Update
+    ipcRenderer.on('download-metadata', (event, { url, title }) => {
+        const download = window.player.state.downloads.find(dl => dl.url === url);
+        if (download) {
+            download.title = title;
+            window.player.downloadController.renderDownloadManager();
+        }
+    });
+
+    // 7. Keyboard shortcuts local listeners (Focus)
     window.addEventListener('keydown', (e) => {
         if (document.activeElement && (
             document.activeElement.tagName === 'INPUT' || 

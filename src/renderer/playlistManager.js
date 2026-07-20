@@ -64,49 +64,94 @@ function renderPlaylist() {
     
     if (!playlistUl) return;
     playlistUl.innerHTML = '';
-    playlist.forEach((song, index) => {
-        const isLiked = njoyList.includes(song);
-        if (currentMode === 'njoy' && !isLiked) return;
-        
-        const li = document.createElement('li');
-        if (index === currentSongIndex) li.classList.add('active');
-        
-        const span = document.createElement('span');
-        span.innerText = path.parse(song).name;
-        span.style.flexGrow = '1';
-        span.addEventListener('click', () => { 
-            window.player.state.currentSongIndex = index; 
-            window.player.audio.changeSongWithFade(index);
-        });
-        
-        const heartBtn = document.createElement('button');
-        heartBtn.className = `heart-btn ${isLiked ? 'liked' : ''}`;
-        heartBtn.innerHTML = isLiked ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
-        heartBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (window.player.state.njoyList.includes(song)) {
+    
+    if (currentMode === 'njoy') {
+        // Mode Queue: Iterasi langsung pada njoyList agar sesuai dengan urutan FIFO antrean
+        njoyList.forEach((song, queueIndex) => {
+            const mainIndex = playlist.indexOf(song);
+            if (mainIndex === -1) return;
+            
+            const li = document.createElement('li');
+            if (mainIndex === currentSongIndex) li.classList.add('active');
+            
+            const span = document.createElement('span');
+            span.innerText = path.parse(song).name;
+            span.style.flexGrow = '1';
+            span.addEventListener('click', () => { 
+                window.player.state.currentSongIndex = mainIndex; 
+                window.player.audio.changeSongWithFade(mainIndex);
+            });
+            
+            const heartBtn = document.createElement('button');
+            heartBtn.className = 'heart-btn liked';
+            heartBtn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+            heartBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Hapus dari antrean
                 window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
-            } else {
-                window.player.state.njoyList.push(song);
-            }
-            localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
-            renderPlaylist();
-        });
+                localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
+                renderPlaylist();
+            });
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'delete-btn';
-        deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-        deleteBtn.title = 'Hapus Lagu';
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteSong(song);
-        });
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            deleteBtn.title = 'Hapus Lagu';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteSong(song);
+            });
 
-        li.appendChild(span);
-        li.appendChild(heartBtn);
-        li.appendChild(deleteBtn);
-        playlistUl.appendChild(li);
-    });
+            li.appendChild(span);
+            li.appendChild(heartBtn);
+            li.appendChild(deleteBtn);
+            playlistUl.appendChild(li);
+        });
+    } else {
+        // Mode Semua: Iterasi seluruh lagu berdasarkan daftar alfabetis normal
+        playlist.forEach((song, index) => {
+            const isLiked = njoyList.includes(song);
+            
+            const li = document.createElement('li');
+            if (index === currentSongIndex) li.classList.add('active');
+            
+            const span = document.createElement('span');
+            span.innerText = path.parse(song).name;
+            span.style.flexGrow = '1';
+            span.addEventListener('click', () => { 
+                window.player.state.currentSongIndex = index; 
+                window.player.audio.changeSongWithFade(index);
+            });
+            
+            const heartBtn = document.createElement('button');
+            heartBtn.className = `heart-btn ${isLiked ? 'liked' : ''}`;
+            heartBtn.innerHTML = isLiked ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+            heartBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (window.player.state.njoyList.includes(song)) {
+                    window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
+                } else {
+                    window.player.state.njoyList.push(song);
+                }
+                localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
+                renderPlaylist();
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+            deleteBtn.title = 'Hapus Lagu';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteSong(song);
+            });
+
+            li.appendChild(span);
+            li.appendChild(heartBtn);
+            li.appendChild(deleteBtn);
+            playlistUl.appendChild(li);
+        });
+    }
 }
 
 function showCustomConfirm(title, message) {

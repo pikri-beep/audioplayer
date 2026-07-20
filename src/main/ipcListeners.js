@@ -11,8 +11,8 @@ function registerIpcListeners() {
             
             if (!state.miniWin || state.miniWin.isDestroyed()) {
                 state.miniWin = new BrowserWindow({
-                    width: 320, 
-                    height: 100,
+                    width: 340, 
+                    height: 110,
                     frame: false,
                     transparent: true,
                     alwaysOnTop: true,

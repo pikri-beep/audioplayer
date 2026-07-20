@@ -2,11 +2,23 @@ const { ipcRenderer } = require('electron');
 
 function syncToMiniPlayer() {
     const { audio, songTitleEl, songArtistEl } = window.player.dom;
+    const { currentLyrics, currentLyricIndex } = window.player.state;
+    
+    let activeLyric = '';
+    if (currentLyrics && currentLyrics.length > 0) {
+        if (currentLyricIndex >= 0 && currentLyricIndex < currentLyrics.length) {
+            activeLyric = currentLyrics[currentLyricIndex].text;
+        } else {
+            activeLyric = 'Intro...';
+        }
+    }
+
     ipcRenderer.send('sync-mini-player', {
-        title: songTitleEl.innerText,
-        artist: songArtistEl.innerText,
-        cover: document.getElementById('album-art-img').src,
-        isPlaying: !audio.paused,
+        title: songTitleEl ? songTitleEl.innerText : '',
+        artist: songArtistEl ? songArtistEl.innerText : '',
+        cover: document.getElementById('album-art-img') ? document.getElementById('album-art-img').src : '',
+        isPlaying: audio ? !audio.paused : false,
+        lyric: activeLyric,
         theme: document.body.getAttribute('data-theme') || 'default',
         themeGlow: getComputedStyle(document.documentElement).getPropertyValue('--theme-glow').trim(),
         themeBorder: getComputedStyle(document.documentElement).getPropertyValue('--theme-border').trim()
@@ -14,9 +26,22 @@ function syncToMiniPlayer() {
 }
 
 function togglePlay() {
-    const { playlist } = window.player.state;
+    const { playlist, currentMode, njoyList, currentSongIndex } = window.player.state;
     const { audio, playBtn } = window.player.dom;
     if (playlist.length === 0) return;
+    
+    if (currentMode === 'njoy') {
+        if (njoyList.length === 0) return;
+        // Jika lagu yang dimuat tidak ada dalam queue, muat lagu pertama di queue
+        const currentSong = playlist[currentSongIndex];
+        if (!njoyList.includes(currentSong)) {
+            const firstQueueSong = njoyList[0];
+            const idx = playlist.indexOf(firstQueueSong);
+            if (idx !== -1) {
+                window.player.playlistManager.loadSong(idx);
+            }
+        }
+    }
     
     if (audio.paused) {
         audio.play().catch(err => console.log(err));
@@ -77,15 +102,39 @@ function nextSong(isAutomatic = false) {
     const auto = isAutomatic === true;
     if (playlist.length === 0) return;
     
+    // Hapus lagu saat ini dari queue jika dimainkan di mode queue, atau selesai diputar otomatis
+    const currentSong = playlist[currentSongIndex];
+    const queueIndex = njoyList.indexOf(currentSong);
+    if (queueIndex !== -1 && (auto || currentMode === 'njoy')) {
+        njoyList.splice(queueIndex, 1);
+        localStorage.setItem('njoyList', JSON.stringify(njoyList));
+        window.player.playlistManager.renderPlaylist();
+    }
+    
+    if (currentMode === 'njoy') {
+        if (njoyList.length > 0) {
+            // Putar lagu pertama di antrean baru
+            const nextIdx = playlist.indexOf(njoyList[0]);
+            if (nextIdx !== -1) {
+                changeSongWithFade(nextIdx);
+            }
+        } else {
+            // Antrean habis, stop pemutaran
+            const { audio, playBtn } = window.player.dom;
+            if (audio) audio.pause();
+            if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        }
+        return;
+    }
+    
+    // Logika Mode 'all' (Biasa)
     let nextIndex = currentSongIndex;
     if (auto && isRepeat) nextIndex = currentSongIndex;
     else if (isShuffle) {
         if (unplayedShuffle.length === 0) {
             for (let i = 0; i < playlist.length; i++) {
                 if (i !== currentSongIndex) {
-                    if (currentMode !== 'njoy' || njoyList.includes(playlist[i])) {
-                        window.player.state.unplayedShuffle.push(i);
-                    }
+                    window.player.state.unplayedShuffle.push(i);
                 }
             }
         }
@@ -98,58 +147,36 @@ function nextSong(isAutomatic = false) {
             nextIndex = currentSongIndex;
         }
     } else {
-        if (currentMode === 'njoy') {
-            let found = false;
-            for (let i = 1; i <= playlist.length; i++) {
-                let idx = (currentSongIndex + i) % playlist.length;
-                if (njoyList.includes(playlist[idx])) {
-                    nextIndex = idx;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) nextIndex = currentSongIndex;
-        } else {
-            nextIndex = (currentSongIndex + 1) % playlist.length;
-        }
+        nextIndex = (currentSongIndex + 1) % playlist.length;
     }
     changeSongWithFade(nextIndex); 
 }
 
 function prevSong(isAutomatic = false) {
-    const { playlist, currentSongIndex, isShuffle, isRepeat, currentMode, njoyList } = window.player.state;
+    const { playlist, currentSongIndex, isShuffle, isRepeat, currentMode } = window.player.state;
     const auto = isAutomatic === true;
     if (playlist.length === 0) return;
+    
+    if (currentMode === 'njoy') {
+        // Di mode queue, mengulang lagu dari awal karena tidak ada riwayat queue
+        const { audio } = window.player.dom;
+        if (audio) {
+            audio.currentTime = 0;
+            if (audio.paused) {
+                audio.play().catch(e => console.log(e));
+                const { playBtn } = window.player.dom;
+                if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            }
+        }
+        return;
+    }
     
     let prevIndex = currentSongIndex;
     if (auto && isRepeat) prevIndex = currentSongIndex;
     else if (isShuffle) {
-        if (currentMode === 'njoy') {
-            const likedIndices = [];
-            playlist.forEach((song, idx) => {
-                if (njoyList.includes(song)) likedIndices.push(idx);
-            });
-            if (likedIndices.length > 0) {
-                prevIndex = likedIndices[Math.floor(Math.random() * likedIndices.length)];
-            }
-        } else {
-            prevIndex = Math.floor(Math.random() * playlist.length);
-        }
+        prevIndex = Math.floor(Math.random() * playlist.length);
     } else {
-        if (currentMode === 'njoy') {
-            let found = false;
-            for (let i = 1; i <= playlist.length; i++) {
-                let idx = (currentSongIndex - i + playlist.length) % playlist.length;
-                if (njoyList.includes(playlist[idx])) {
-                    prevIndex = idx;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) prevIndex = currentSongIndex;
-        } else {
-            prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-        }
+        prevIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
     }
     changeSongWithFade(prevIndex);
 }

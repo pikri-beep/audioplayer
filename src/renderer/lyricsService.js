@@ -52,6 +52,9 @@ async function fetchLyrics(artist, title) {
                     p.addEventListener('click', () => { audio.currentTime = line.time; });
                     lyricsContainer.appendChild(p);
                 });
+                if (window.player.audio && window.player.audio.syncToMiniPlayer) {
+                    window.player.audio.syncToMiniPlayer();
+                }
                 return;
             }
         }

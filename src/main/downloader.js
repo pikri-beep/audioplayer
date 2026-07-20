@@ -124,6 +124,12 @@ function registerDownloaderHandlers() {
                     const cleanTitle = cleanSearchTerm(rawTitle);
                     const cleanUploader = cleanSearchTerm(rawUploader);
                     
+                    // Kirim pembaruan judul ke renderer secara real-time
+                    if (rawTitle) {
+                        const displayTitle = cleanUploader ? `${cleanUploader} - ${cleanTitle}` : cleanTitle;
+                        event.sender.send('download-metadata', { url, title: displayTitle });
+                    }
+                    
                     let searchQuery = cleanTitle;
                     if (cleanUploader && !cleanTitle.toLowerCase().includes(cleanUploader.toLowerCase())) {
                         searchQuery = cleanUploader + ' ' + cleanTitle;

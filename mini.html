@@ -17,8 +17,8 @@
             /* BUG FIX: Memakai variabel vibrant yang dinamis */
             border: 1px solid var(--theme-border, rgba(255, 255, 255, 0.15));
             border-radius: 20px;
-            width: 320px;
-            height: 100px;
+            width: 340px;
+            height: 110px;
             display: flex;
             align-items: center;
             padding: 10px;
@@ -27,24 +27,38 @@
             transition: all 0.3s ease;
         }
 
-        .cover-art { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
-        .song-info { flex: 1; padding-left: 15px; overflow: hidden; }
-        h3 { color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
-        p { color: #aaa; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cover-art { width: 85px; height: 85px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+        .song-info { flex: 1; padding-left: 15px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
+        h3 { color: #fff; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 1px; }
+        p#artist { color: #aaa; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
 
-        .controls { display: flex; gap: 12px; margin-top: 8px; align-items: center; -webkit-app-region: no-drag; }
+        .mini-lyric {
+            color: var(--theme-glow, #a855f7);
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-style: italic;
+            margin-bottom: 3px;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            text-shadow: 0 0 6px var(--theme-border, rgba(168, 85, 247, 0.4));
+        }
+
+        .controls { display: flex; gap: 12px; margin-top: 2px; align-items: center; -webkit-app-region: no-drag; }
         button { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; transition: 0.2s; }
         /* BUG FIX: Hover tombolnya pakai warna Vibrant */
         button:hover { color: var(--theme-glow, #a855f7); transform: scale(1.1); }
-        #play-btn { font-size: 24px; }
+        #play-btn { font-size: 22px; }
         
         .expand-btn { position: absolute; top: 10px; right: 12px; font-size: 14px; color: #888; -webkit-app-region: no-drag; }
         .expand-btn:hover { color: #fff; }
 
         /* TEMA */
         [data-theme="marvel"] .widget-container { background: linear-gradient(145deg, rgba(102, 0, 0, 0.95), rgba(51, 0, 0, 0.95)); border: 1px solid #d4af37; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2); }
-        [data-theme="marvel"] h3 { color: #d4af37; font-family: 'Bangers', sans-serif; letter-spacing: 1px; font-size: 18px; }
-        [data-theme="marvel"] p { color: #fff; }
+        [data-theme="marvel"] h3 { color: #d4af37; font-family: 'Bangers', sans-serif; letter-spacing: 1px; font-size: 17px; }
+        [data-theme="marvel"] p#artist { color: #fff; }
+        [data-theme="marvel"] .mini-lyric { color: #ffd700; text-shadow: 0 0 6px rgba(212, 175, 55, 0.6); }
         [data-theme="marvel"] button:hover { color: #df1f2d; transform: scale(1.1); }
         [data-theme="marvel"] button { color: #d4af37; }
 
@@ -52,7 +66,8 @@
         [data-theme="pixel"] .widget-container { background: #0000aa; border: 4px solid #fff; border-radius: 0; box-shadow: 4px 4px 0px #000; }
         [data-theme="pixel"] .cover-art { border-radius: 0; border: 2px solid #fff; }
         [data-theme="pixel"] h3 { font-size: 9px; text-shadow: 2px 2px 0px #000; }
-        [data-theme="pixel"] p { font-size: 7px; color: #fff; }
+        [data-theme="pixel"] p#artist { font-size: 7px; color: #fff; }
+        [data-theme="pixel"] .mini-lyric { font-size: 7px; color: #ffff00; text-shadow: 1px 1px 0px #000; }
         [data-theme="pixel"] button { color: #fff; text-shadow: 2px 2px 0px #000; }
         [data-theme="pixel"] button:hover { color: #aaa; transform: none; }
 
@@ -60,26 +75,30 @@
         [data-theme="minecraft"] .widget-container { background: #866043; border: 4px solid #3b2712; border-top: 8px solid #5fa032; border-radius: 0; box-shadow: 4px 4px 0px rgba(0,0,0,0.5); }
         [data-theme="minecraft"] .cover-art { border-radius: 0; border: 2px solid #fff; image-rendering: crisp-edges; }
         [data-theme="minecraft"] h3 { font-size: 9px; color: #2e600a; text-shadow: 2px 2px 0px #3b2712; }
-        [data-theme="minecraft"] p { font-size: 7px; color: #fff; }
+        [data-theme="minecraft"] p#artist { font-size: 7px; color: #fff; }
+        [data-theme="minecraft"] .mini-lyric { font-size: 7px; color: #ffff55; text-shadow: 1px 1px 0px #3b2712; }
         [data-theme="minecraft"] button { color: #c6c6c6; }
         [data-theme="minecraft"] button:hover { color: #fff; transform: none; }
 
         [data-theme="spiderman"] .widget-container { background: rgba(17, 17, 17, 0.95); border: 2px solid #df1f2d; box-shadow: 0 0 20px rgba(4, 54, 115, 0.8); }
-        [data-theme="spiderman"] h3 { font-family: 'Bangers', cursive !important; font-size: 18px; color: #df1f2d; transform: skewY(-5deg); text-shadow: 2px 2px 0px #043673; display: inline-block;}
+        [data-theme="spiderman"] h3 { font-family: 'Bangers', cursive !important; font-size: 17px; color: #df1f2d; transform: skewY(-3deg); text-shadow: 2px 2px 0px #043673; display: inline-block;}
+        [data-theme="spiderman"] .mini-lyric { color: #60a5fa; text-shadow: 0 0 5px #043673; }
         [data-theme="spiderman"] button { color: #df1f2d; }
         [data-theme="spiderman"] button:hover { color: #043673; text-shadow: 0 0 5px #df1f2d;}
         [data-theme="spiderman"] .cover-art { border: 2px solid #df1f2d; }
 
         [data-theme="toystory"] .widget-container { background: rgba(255, 255, 255, 0.95); border: 3px solid #ff0000; box-shadow: 6px 6px 0px #223ca9; border-radius: 20px; }
-        [data-theme="toystory"] h3 { font-family: 'Chewy', cursive !important; font-size: 18px; color: #fff000; -webkit-text-stroke: 1px #ff0000; text-shadow: 2px 2px 0px #223ca9; }
-        [data-theme="toystory"] p { color: #223ca9; font-weight: bold; }
+        [data-theme="toystory"] h3 { font-family: 'Chewy', cursive !important; font-size: 17px; color: #fff000; -webkit-text-stroke: 1px #ff0000; text-shadow: 2px 2px 0px #223ca9; }
+        [data-theme="toystory"] p#artist { color: #223ca9; font-weight: bold; }
+        [data-theme="toystory"] .mini-lyric { color: #d97706; font-weight: bold; }
         [data-theme="toystory"] button { color: #223ca9; }
         [data-theme="toystory"] button:hover { color: #551a8b; }
         [data-theme="toystory"] .cover-art { border: 3px solid #223ca9; }
 
         [data-theme="hacker"] * { font-family: 'Courier New', Courier, monospace !important; }
         [data-theme="hacker"] .widget-container { background: rgba(0, 0, 0, 0.95); border: 1px solid #00ff00; border-radius: 0; box-shadow: 0 0 10px rgba(0,255,0,0.2); }
-        [data-theme="hacker"] h3, [data-theme="hacker"] p, [data-theme="hacker"] button { color: #00ff00; }
+        [data-theme="hacker"] h3, [data-theme="hacker"] p#artist, [data-theme="hacker"] button { color: #00ff00; }
+        [data-theme="hacker"] .mini-lyric { color: #00ff00; text-shadow: 0 0 8px #00ff00; }
         [data-theme="hacker"] button:hover { color: #fff; text-shadow: 0 0 5px #00ff00; }
         [data-theme="hacker"] .cover-art { filter: grayscale(100%) sepia(100%) hue-rotate(70deg) contrast(150%); border-radius: 0; border: 1px dashed #00ff00; }
 
@@ -164,8 +183,13 @@
             text-shadow: 0 0 8px rgba(0, 240, 255, 0.5);
         }
 
-        [data-theme="cosmic"] p {
+        [data-theme="cosmic"] p#artist {
             color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        [data-theme="cosmic"] .mini-lyric {
+            color: #00f0ff !important;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
         }
 
         [data-theme="cosmic"] button {
@@ -193,6 +217,7 @@
         <div class="song-info">
             <h3 id="title">NJOY Player</h3>
             <p id="artist">Memuat...</p>
+            <p id="mini-lyric" class="mini-lyric"></p>
             <div class="controls">
                 <button id="prev-btn"><i class="fa-solid fa-backward-step"></i></button>
                 <button id="play-btn"><i class="fa-solid fa-play"></i></button>
@@ -204,6 +229,8 @@
 
     <script>
         const { ipcRenderer } = require('electron');
+
+        let lastLyric = null;
 
         ipcRenderer.on('update-mini-player', (event, data) => {
             if(data.theme) document.body.setAttribute('data-theme', data.theme);
@@ -217,6 +244,21 @@
             document.getElementById('title').innerText = data.title;
             document.getElementById('artist').innerText = data.artist;
             document.getElementById('cover').src = data.cover;
+            
+            const lyricEl = document.getElementById('mini-lyric');
+            if (lyricEl) {
+                const newLyric = data.lyric ? data.lyric.trim() : '';
+                if (newLyric !== lastLyric) {
+                    lastLyric = newLyric;
+                    lyricEl.style.opacity = '0';
+                    lyricEl.style.transform = 'translateY(2px)';
+                    setTimeout(() => {
+                        lyricEl.innerText = newLyric ? `♪ ${newLyric} ♪` : '';
+                        lyricEl.style.opacity = '1';
+                        lyricEl.style.transform = 'translateY(0)';
+                    }, 120);
+                }
+            }
             
             const playBtn = document.getElementById('play-btn');
             playBtn.innerHTML = data.isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
