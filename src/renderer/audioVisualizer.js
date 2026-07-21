@@ -1,8 +1,49 @@
 let audioCtx = null;
+let gainNode = null;
 let analyser = null;
 let sourceNode = null;
 let isInitialized = false;
 let animationFrameId = null;
+let currentBoostPercent = 100;
+
+function updateGainValue() {
+    if (gainNode && audioCtx) {
+        // Boost factor: 100% -> 1.0, 500% -> 5.0
+        const gainValue = Math.min(5.0, Math.max(1.0, currentBoostPercent / 100.0));
+        gainNode.gain.setValueAtTime(gainValue, audioCtx.currentTime);
+    }
+}
+
+function updateBoostUI(percent) {
+    const boostTag = document.getElementById('player-boost-tag');
+    if (boostTag) {
+        if (percent > 100) {
+            boostTag.style.display = 'block';
+            boostTag.innerText = `⚡ Boost ${percent}%`;
+        } else {
+            boostTag.style.display = 'none';
+        }
+    }
+}
+
+function checkVolumeBoostFile() {
+    const fs = require('fs');
+    const path = require('path');
+    try {
+        const boostPath = path.join(__dirname, '../../../volume_boost.json');
+        const altPath = path.join(__dirname, '../../volume_boost.json');
+        const targetPath = fs.existsSync(boostPath) ? boostPath : (fs.existsSync(altPath) ? altPath : null);
+
+        if (targetPath) {
+            const data = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
+            if (data.boostPercent && data.boostPercent !== currentBoostPercent) {
+                currentBoostPercent = Math.min(500, Math.max(100, data.boostPercent));
+                updateGainValue();
+                updateBoostUI(currentBoostPercent);
+            }
+        }
+    } catch (e) {}
+}
 
 function initAudioVisualizer() {
     const canvas = document.getElementById('audio-wave-canvas');
@@ -22,14 +63,18 @@ function initAudioVisualizer() {
         if (isInitialized) return;
         try {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioCtx.createGain();
             analyser = audioCtx.createAnalyser();
             analyser.fftSize = 256;
             analyser.smoothingTimeConstant = 0.90; // Super smooth & fluid
 
             sourceNode = audioCtx.createMediaElementSource(audio);
-            sourceNode.connect(analyser);
+            sourceNode.connect(gainNode);
+            gainNode.connect(analyser);
             analyser.connect(audioCtx.destination);
+            
             isInitialized = true;
+            updateGainValue();
         } catch (err) {
             console.warn('[AudioVisualizer] AudioContext init note:', err.message);
         }
@@ -44,6 +89,10 @@ function initAudioVisualizer() {
             audioCtx.resume();
         }
     });
+
+    // Periodically check for volume boost updates from App Center or config
+    setInterval(checkVolumeBoostFile, 500);
+    checkVolumeBoostFile();
 
     function draw() {
         animationFrameId = requestAnimationFrame(draw);
