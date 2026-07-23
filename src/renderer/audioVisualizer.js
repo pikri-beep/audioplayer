@@ -73,6 +73,9 @@ function initAudioVisualizer() {
             gainNode.connect(analyser);
             analyser.connect(audioCtx.destination);
             
+            window.player.analyser = analyser;
+            window.player.audioCtx = audioCtx;
+            
             isInitialized = true;
             updateGainValue();
         } catch (err) {

@@ -27,10 +27,28 @@ function initializeUiListeners() {
                 progressBar.value = (audio.currentTime / audio.duration) * 100;
                 let m = Math.floor(audio.currentTime / 60), s = Math.floor(audio.currentTime % 60);
                 currentTimeEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
-                
-                // Gapless Crossfade Trigger (4 seconds early)
-                if (audio.currentTime >= audio.duration - 4) {
-                    if (!window.player.state.isCrossfadingNext) {
+                // Smart dB Silence Trimming & Gapless Crossfade
+                if (audio.currentTime >= audio.duration - 15 && !window.player.state.isCrossfadingNext) {
+                    let shouldCrossfade = false;
+                    
+                    if (audio.currentTime >= audio.duration - 3) {
+                        shouldCrossfade = true;
+                    } else if (window.player.analyser) {
+                        const dataArray = new Uint8Array(window.player.analyser.fftSize);
+                        window.player.analyser.getByteTimeDomainData(dataArray);
+                        let sumSquares = 0;
+                        for (let i = 0; i < dataArray.length; i++) {
+                            const norm = (dataArray[i] / 128.0) - 1.0;
+                            sumSquares += norm * norm;
+                        }
+                        const rms = Math.sqrt(sumSquares / dataArray.length);
+                        // Jika desibel sangat rendah (RMS < 0.015), lagu dianggap mulai hening
+                        if (rms < 0.015) {
+                            shouldCrossfade = true;
+                        }
+                    }
+                    
+                    if (shouldCrossfade) {
                         window.player.state.isCrossfadingNext = true;
                         window.player.audio.nextSong(true);
                     }
