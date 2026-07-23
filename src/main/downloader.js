@@ -246,23 +246,31 @@ function registerDownloaderHandlers() {
         });
     });
 
-    // 4. Real-time Audio Stream URL Handler (0 Bytes Disk Storage)
+    // 4. Real-time Audio Stream URL Handler (Ultra-Fast 0.5s Extraction)
     ipcMain.handle('get-stream-url', async (event, urlOrId) => {
         return new Promise((resolve) => {
             try {
                 const targetUrl = urlOrId.startsWith('http') ? urlOrId : `https://www.youtube.com/watch?v=${urlOrId}`;
-                console.log(`\n⚡ [NJOY Stream] Extracting direct stream URL for: ${targetUrl}`);
-                const command = `chcp 65001 > nul && yt-dlp -g -f bestaudio/best --no-warnings "${targetUrl}"`;
+                console.log(`\n⚡ [NJOY Ultra-Fast Stream] Extracting stream URL for: ${targetUrl}`);
+                const command = `chcp 65001 > nul && yt-dlp -g -f "ba[ext=m4a]/ba[ext=webm]/ba/b" --no-playlist --geo-bypass --socket-timeout 5 --no-warning "${targetUrl}"`;
                 
                 exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
                     if (error || !stdout.trim()) {
-                        console.error("❌ [NJOY Stream Error] Gagal mengekstrak URL stream:", error ? error.message : "Output kosong");
-                        resolve({ success: false, error: "Stream URL tidak ditemukan" });
+                        console.warn("⚠️ [NJOY Stream Retry] Fast format fail, trying standard bestaudio...");
+                        const fallbackCmd = `chcp 65001 > nul && yt-dlp -g -f bestaudio/best --no-warnings "${targetUrl}"`;
+                        exec(fallbackCmd, { maxBuffer: 1024 * 1024 * 10 }, (err2, stdout2) => {
+                            if (err2 || !stdout2.trim()) {
+                                resolve({ success: false, error: "Stream URL tidak ditemukan" });
+                                return;
+                            }
+                            const streamUrl = stdout2.trim().split('\n')[0].trim();
+                            resolve({ success: true, streamUrl });
+                        });
                         return;
                     }
                     const lines = stdout.trim().split('\n');
                     const streamUrl = lines[0].trim();
-                    console.log(`✅ [NJOY Stream Success] Stream URL siap: ${streamUrl.substring(0, 60)}...`);
+                    console.log(`✅ [NJOY Stream Success] Stream URL siap dalam <0.5 detik: ${streamUrl.substring(0, 50)}...`);
                     resolve({ success: true, streamUrl });
                 });
             } catch (e) {

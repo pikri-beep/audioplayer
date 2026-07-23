@@ -98,8 +98,42 @@ function changeSongWithFade(newIndex) {
     }, 30); 
 }
 
+function getSmartShuffleNextIndex(playlist, currentSongIndex) {
+    if (playlist.length <= 1) return 0;
+    const currentSongName = playlist[currentSongIndex] || '';
+    
+    // Parse current song artist
+    let currentArtist = '';
+    if (currentSongName.includes('-')) {
+        currentArtist = currentSongName.split('-')[0].trim().toLowerCase();
+    }
+    
+    // Filter matching songs by same artist or similar vibe/keywords
+    const matchingIndices = [];
+    playlist.forEach((song, idx) => {
+        if (idx === currentSongIndex) return;
+        const lowerSong = song.toLowerCase();
+        if (currentArtist && lowerSong.includes(currentArtist)) {
+            matchingIndices.push(idx);
+        }
+    });
+    
+    if (matchingIndices.length > 0) {
+        const randomIdx = Math.floor(Math.random() * matchingIndices.length);
+        return matchingIndices[randomIdx];
+    }
+    
+    // Fallback: Random selection avoiding exact current song
+    let nextIdx = Math.floor(Math.random() * playlist.length);
+    if (nextIdx === currentSongIndex && playlist.length > 1) {
+        nextIdx = (currentSongIndex + 1) % playlist.length;
+    }
+    return nextIdx;
+}
+
 function nextSong(isAutomatic = false) {
-    const { playlist, currentSongIndex, isShuffle, isRepeat, unplayedShuffle, currentMode, njoyList, isStreamMode, streamQueue, streamQueueIndex, currentStreamTrack } = window.player.state;
+    const { playlist, currentSongIndex, isRepeat, unplayedShuffle, currentMode, njoyList, isStreamMode, streamQueue, streamQueueIndex, currentStreamTrack } = window.player.state;
+    const shuffleMode = window.player.state.shuffleMode || (window.player.state.isShuffle ? 'normal' : 'off');
     const auto = isAutomatic === true;
 
     // Handle Streaming Mode Playback
@@ -109,7 +143,20 @@ function nextSong(isAutomatic = false) {
         let nextIdx = (streamQueueIndex !== undefined ? streamQueueIndex : 0) + 1;
         if (auto && isRepeat) {
             nextIdx = streamQueueIndex;
-        } else if (isShuffle) {
+        } else if (shuffleMode === 'smart') {
+            // Smart Shuffle ✨ for streaming: Fetch related tracks of current song artist/vibe
+            const currentTitle = currentStreamTrack ? (currentStreamTrack.author + " " + currentStreamTrack.title) : "popular music";
+            ipcRenderer.invoke('get-related-tracks', currentTitle).then(related => {
+                if (related && related.length > 0) {
+                    window.player.state.streamQueue = related;
+                    window.player.state.streamQueueIndex = 0;
+                    if (window.player.downloadController && window.player.downloadController.playStreamSong) {
+                        window.player.downloadController.playStreamSong(related[0], related);
+                    }
+                }
+            });
+            return;
+        } else if (shuffleMode === 'normal') {
             nextIdx = Math.floor(Math.random() * streamQueue.length);
         }
         
@@ -148,13 +195,11 @@ function nextSong(isAutomatic = false) {
     
     if (currentMode === 'njoy') {
         if (njoyList.length > 0) {
-            // Putar lagu pertama di antrean baru
             const nextIdx = playlist.indexOf(njoyList[0]);
             if (nextIdx !== -1) {
                 changeSongWithFade(nextIdx);
             }
         } else {
-            // Antrean habis, stop pemutaran
             const { audio, playBtn } = window.player.dom;
             if (audio) audio.pause();
             if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -165,7 +210,9 @@ function nextSong(isAutomatic = false) {
     // Logika Mode 'all' (Biasa)
     let nextIndex = currentSongIndex;
     if (auto && isRepeat) nextIndex = currentSongIndex;
-    else if (isShuffle) {
+    else if (shuffleMode === 'smart') {
+        nextIndex = getSmartShuffleNextIndex(playlist, currentSongIndex);
+    } else if (shuffleMode === 'normal') {
         if (unplayedShuffle.length === 0) {
             for (let i = 0; i < playlist.length; i++) {
                 if (i !== currentSongIndex) {

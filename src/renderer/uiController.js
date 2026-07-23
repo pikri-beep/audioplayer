@@ -91,11 +91,31 @@ function initializeUiListeners() {
         });
     }
 
-    // 3. Shuffle & Repeat toggle click listeners
     if (shuffleBtn) {
         shuffleBtn.addEventListener('click', () => {
-            window.player.state.isShuffle = !window.player.state.isShuffle;
-            shuffleBtn.style.color = window.player.state.isShuffle ? 'var(--theme-glow)' : '#aaa';
+            const currentMode = window.player.state.shuffleMode || (window.player.state.isShuffle ? 'normal' : 'off');
+            if (currentMode === 'off') {
+                window.player.state.shuffleMode = 'normal';
+                window.player.state.isShuffle = true;
+                shuffleBtn.style.color = 'var(--theme-glow)';
+                shuffleBtn.style.textShadow = 'none';
+                shuffleBtn.title = 'Shuffle Standar (1 Ketuk)';
+                shuffleBtn.innerHTML = '<i class="fa-solid fa-shuffle"></i>';
+            } else if (currentMode === 'normal') {
+                window.player.state.shuffleMode = 'smart';
+                window.player.state.isShuffle = true;
+                shuffleBtn.style.color = '#f59e0b';
+                shuffleBtn.style.textShadow = '0 0 10px #f59e0b';
+                shuffleBtn.title = 'Smart Shuffle ✨ (Sensitif Vibe & Artis - 2 Ketuk)';
+                shuffleBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
+            } else {
+                window.player.state.shuffleMode = 'off';
+                window.player.state.isShuffle = false;
+                shuffleBtn.style.color = '#aaa';
+                shuffleBtn.style.textShadow = 'none';
+                shuffleBtn.title = 'Shuffle Mati';
+                shuffleBtn.innerHTML = '<i class="fa-solid fa-shuffle"></i>';
+            }
         });
     }
 

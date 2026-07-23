@@ -57,6 +57,7 @@ window.player = {
         playlist: [],
         currentSongIndex: 0,
         isShuffle: false,
+        shuffleMode: 'off',
         isRepeat: false,
         isMiniMode: false,
         unplayedShuffle: [],
