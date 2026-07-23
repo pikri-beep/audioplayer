@@ -98,8 +98,42 @@ function changeSongWithFade(newIndex) {
 }
 
 function nextSong(isAutomatic = false) {
-    const { playlist, currentSongIndex, isShuffle, isRepeat, unplayedShuffle, currentMode, njoyList } = window.player.state;
+    const { playlist, currentSongIndex, isShuffle, isRepeat, unplayedShuffle, currentMode, njoyList, isStreamMode, streamQueue, streamQueueIndex, currentStreamTrack } = window.player.state;
     const auto = isAutomatic === true;
+
+    // Handle Streaming Mode Playback
+    if (isStreamMode) {
+        if (!streamQueue || streamQueue.length === 0) return;
+        
+        let nextIdx = (streamQueueIndex !== undefined ? streamQueueIndex : 0) + 1;
+        if (auto && isRepeat) {
+            nextIdx = streamQueueIndex;
+        } else if (isShuffle) {
+            nextIdx = Math.floor(Math.random() * streamQueue.length);
+        }
+        
+        if (nextIdx < streamQueue.length) {
+            window.player.state.streamQueueIndex = nextIdx;
+            const nextTrack = streamQueue[nextIdx];
+            if (window.player.downloadController && window.player.downloadController.playStreamSong) {
+                window.player.downloadController.playStreamSong(nextTrack, streamQueue);
+            }
+        } else {
+            // Infinite Radio / Autoplay Related Tracks
+            const currentTitle = currentStreamTrack ? currentStreamTrack.title : "popular music";
+            ipcRenderer.invoke('get-related-tracks', currentTitle).then(related => {
+                if (related && related.length > 0) {
+                    window.player.state.streamQueue = related;
+                    window.player.state.streamQueueIndex = 0;
+                    if (window.player.downloadController && window.player.downloadController.playStreamSong) {
+                        window.player.downloadController.playStreamSong(related[0], related);
+                    }
+                }
+            });
+        }
+        return;
+    }
+
     if (playlist.length === 0) return;
     
     // Hapus lagu saat ini dari queue jika dimainkan di mode queue, atau selesai diputar otomatis

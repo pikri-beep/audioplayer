@@ -73,12 +73,43 @@ window.player = {
         searchResults: [],
         searchCurrentPage: 1,
         searchResultsPerPage: 5,
-        downloads: []
+        downloads: [],
+        isStreamMode: false,
+        streamQueue: [],
+        streamQueueIndex: 0,
+        currentStreamTrack: null,
+        prefetchedNextStream: null
     }
 };
 
 // Set volume awal agar sinkron dengan UI slider
 window.player.dom.audio.volume = window.player.state.targetVolume;
+
+// Pre-fetching stream URL 10 detik sebelum lagu selesai
+window.player.dom.audio.addEventListener('timeupdate', () => {
+    const { audio } = window.player.dom;
+    const { isStreamMode, streamQueue, streamQueueIndex, prefetchedNextStream } = window.player.state;
+    
+    if (isStreamMode && audio && audio.duration > 0) {
+        const remainingTime = audio.duration - audio.currentTime;
+        if (remainingTime <= 10 && remainingTime > 1 && !prefetchedNextStream) {
+            const nextIdx = streamQueueIndex + 1;
+            if (streamQueue && nextIdx < streamQueue.length) {
+                const nextTrack = streamQueue[nextIdx];
+                window.player.state.prefetchedNextStream = "fetching";
+                console.log(`\n⚡ [NJOY Pre-fetch] Background pre-fetching stream URL untuk lagu berikutnya: "${nextTrack.title}"`);
+                ipcRenderer.invoke('get-stream-url', nextTrack.url).then(res => {
+                    if (res && res.success) {
+                        window.player.state.prefetchedNextStream = res.streamUrl;
+                        console.log(`✅ [NJOY Pre-fetch Success] Stream URL lagu berikutnya sudah siap di memori!`);
+                    }
+                }).catch(() => {
+                    window.player.state.prefetchedNextStream = null;
+                });
+            }
+        }
+    }
+});
 
 // 2. Load Submodul Renderer
 require('./src/renderer/playlistManager');

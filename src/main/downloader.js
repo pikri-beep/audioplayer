@@ -245,6 +245,54 @@ function registerDownloaderHandlers() {
             });
         });
     });
+
+    // 4. Real-time Audio Stream URL Handler (0 Bytes Disk Storage)
+    ipcMain.handle('get-stream-url', async (event, urlOrId) => {
+        return new Promise((resolve) => {
+            try {
+                const targetUrl = urlOrId.startsWith('http') ? urlOrId : `https://www.youtube.com/watch?v=${urlOrId}`;
+                console.log(`\n⚡ [NJOY Stream] Extracting direct stream URL for: ${targetUrl}`);
+                const command = `chcp 65001 > nul && yt-dlp -g -f bestaudio/best --no-warnings "${targetUrl}"`;
+                
+                exec(command, { maxBuffer: 1024 * 1024 * 10 }, (error, stdout, stderr) => {
+                    if (error || !stdout.trim()) {
+                        console.error("❌ [NJOY Stream Error] Gagal mengekstrak URL stream:", error ? error.message : "Output kosong");
+                        resolve({ success: false, error: "Stream URL tidak ditemukan" });
+                        return;
+                    }
+                    const lines = stdout.trim().split('\n');
+                    const streamUrl = lines[0].trim();
+                    console.log(`✅ [NJOY Stream Success] Stream URL siap: ${streamUrl.substring(0, 60)}...`);
+                    resolve({ success: true, streamUrl });
+                });
+            } catch (e) {
+                console.error("Kesalahan di get-stream-url handler:", e.message);
+                resolve({ success: false, error: e.message });
+            }
+        });
+    });
+
+    // 5. Autoplay / Related Songs Handler for Infinite Radio
+    ipcMain.handle('get-related-tracks', async (event, query) => {
+        try {
+            console.log(`\n📻 [NJOY Autoplay] Mencari lagu terkait untuk radio: "${query}"`);
+            const searchResults = await ytSearch({ query: `${query} song audio` });
+            if (!searchResults || !searchResults.videos || searchResults.videos.length === 0) {
+                return [];
+            }
+            // Shuffle & pick 5 related videos
+            const candidates = searchResults.videos.slice(0, 10).sort(() => Math.random() - 0.5).slice(0, 5);
+            return candidates.map(v => ({
+                title: v.title || "Untitled Video",
+                author: (v.author && v.author.name) ? v.author.name : "Unknown Artist",
+                thumbnail: v.image || v.thumbnail || "assets/logo.png",
+                url: v.url || ""
+            }));
+        } catch (err) {
+            console.error("Gagal mendapatkan related tracks:", err.message);
+            return [];
+        }
+    });
 }
 
 function runStandardYtDlp(url, resolve) {

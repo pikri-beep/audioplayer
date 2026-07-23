@@ -25,7 +25,7 @@ function renderSearchResultsPage() {
     const endIndex = Math.min(startIndex + searchResultsPerPage, searchResults.length);
     const pageItems = searchResults.slice(startIndex, endIndex);
     
-    pageItems.forEach(video => {
+    pageItems.forEach((video, itemIdx) => {
         const li = document.createElement('li');
         li.className = 'yt-search-item';
         li.innerHTML = `
@@ -37,11 +37,21 @@ function renderSearchResultsPage() {
                 <div class="yt-search-title">${video.title}</div>
                 <div class="yt-search-author">${video.author}</div>
             </div>
-            <button class="yt-search-dl-btn" title="Unduh Lagu">
-                <i class="fa-solid fa-arrow-down-long"></i>
-            </button>
+            <div style="display: flex; gap: 6px;">
+                <button class="yt-search-stream-btn" title="Putar Stream (0 Bytes Storage)" style="background: var(--theme-glow); border: none; color: #fff; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 4px;">
+                    <i class="fa-solid fa-play"></i> Stream
+                </button>
+                <button class="yt-search-dl-btn" title="Unduh File MP3">
+                    <i class="fa-solid fa-arrow-down-long"></i>
+                </button>
+            </div>
         `;
         
+        const handleStream = (e) => {
+            e.stopPropagation();
+            playStreamSong(video, pageItems);
+        };
+
         const handleDownload = (e) => {
             e.stopPropagation();
             
@@ -78,7 +88,9 @@ function renderSearchResultsPage() {
             });
         };
         
-        li.addEventListener('click', handleDownload);
+        li.addEventListener('click', handleStream);
+        const streamBtn = li.querySelector('.yt-search-stream-btn');
+        if (streamBtn) streamBtn.addEventListener('click', handleStream);
         const dlBtn = li.querySelector('.yt-search-dl-btn');
         if (dlBtn) dlBtn.addEventListener('click', handleDownload);
         
@@ -86,6 +98,59 @@ function renderSearchResultsPage() {
     });
     
     updatePaginationControls();
+}
+
+async function playStreamSong(videoItem, queueList = []) {
+    const { audio, songTitleEl, songArtistEl, playBtn } = window.player.dom;
+    const albumArtImg = document.getElementById('album-art-img');
+    const ytPopup = window.player.dom.ytPopup || document.getElementById('yt-popup');
+    if (ytPopup) ytPopup.classList.remove('show');
+    
+    if (queueList && queueList.length > 0) {
+        window.player.state.streamQueue = queueList;
+        window.player.state.streamQueueIndex = queueList.findIndex(v => v.url === videoItem.url);
+        if (window.player.state.streamQueueIndex === -1) window.player.state.streamQueueIndex = 0;
+    }
+    
+    window.player.state.currentStreamTrack = videoItem;
+    window.player.state.isStreamMode = true;
+    window.player.state.prefetchedNextStream = null;
+
+    if (songTitleEl) songTitleEl.innerText = "Memuat Stream...";
+    if (songArtistEl) songArtistEl.innerText = videoItem.author || videoItem.title;
+    if (albumArtImg) albumArtImg.src = videoItem.thumbnail || "assets/logo.png";
+    if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    
+    try {
+        let streamUrlToPlay = null;
+        if (window.player.state.prefetchedNextStream && typeof window.player.state.prefetchedNextStream === 'string' && window.player.state.prefetchedNextStream.startsWith('http')) {
+            streamUrlToPlay = window.player.state.prefetchedNextStream;
+            window.player.state.prefetchedNextStream = null;
+            console.log(`⚡ [NJOY Instant Stream] Using pre-fetched stream URL for instant playback!`);
+        } else {
+            const result = await ipcRenderer.invoke('get-stream-url', videoItem.url);
+            if (result && result.success && result.streamUrl) {
+                streamUrlToPlay = result.streamUrl;
+            }
+        }
+
+        if (streamUrlToPlay) {
+            audio.src = streamUrlToPlay;
+            audio.play().then(() => {
+                if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                if (songTitleEl) songTitleEl.innerText = videoItem.title;
+                if (songArtistEl) songArtistEl.innerText = videoItem.author || "YouTube Stream";
+            }).catch(err => console.error("Stream play error:", err));
+        } else {
+            if (songTitleEl) songTitleEl.innerText = "Gagal memuat stream";
+            if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        }
+    } catch (e) {
+        console.error("Gagal streaming lagu:", e);
+        if (songTitleEl) songTitleEl.innerText = "Gagal memuat stream";
+        if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+    }
+}
 }
 
 function updatePaginationControls() {
@@ -276,5 +341,6 @@ window.player.downloadController = {
     updatePaginationControls,
     initializeDownloadListeners,
     renderDownloadManager,
-    updateDownloadBadge
+    updateDownloadBadge,
+    playStreamSong
 };
