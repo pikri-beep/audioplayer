@@ -116,8 +116,10 @@ function initializeUiListeners() {
     // Backdrop click handlers to dismiss popups on backdrop click
     const ytPopup = window.player.dom.ytPopup || document.getElementById('yt-popup');
     const confirmPopup = document.getElementById('confirm-popup');
+    const createPlaylistPopup = document.getElementById('create-playlist-popup');
+    const addToPlaylistPopup = document.getElementById('add-to-playlist-popup');
     
-    [playlistPopup, lyricsPopup, ytPopup, confirmPopup].forEach(popup => {
+    [playlistPopup, lyricsPopup, ytPopup, confirmPopup, createPlaylistPopup, addToPlaylistPopup].forEach(popup => {
         if (popup) {
             popup.addEventListener('click', (e) => {
                 if (e.target === popup) {
@@ -127,25 +129,55 @@ function initializeUiListeners() {
         }
     });
 
-    // Mode tabs (All / Favorites)
+    // Custom Playlist Modal Controls
+    const btnCreatePlaylist = document.getElementById('btn-create-playlist');
+    const closeCreatePlaylistBtn = document.getElementById('close-create-playlist-btn');
+    const savePlaylistBtn = document.getElementById('save-playlist-btn');
+    const newPlaylistNameInput = document.getElementById('new-playlist-name');
+    const closeAddToPlaylistBtn = document.getElementById('close-add-to-playlist-btn');
+
+    if (btnCreatePlaylist && createPlaylistPopup) {
+        btnCreatePlaylist.addEventListener('click', () => {
+            if (newPlaylistNameInput) newPlaylistNameInput.value = '';
+            createPlaylistPopup.classList.add('show');
+        });
+    }
+
+    if (closeCreatePlaylistBtn && createPlaylistPopup) {
+        closeCreatePlaylistBtn.addEventListener('click', () => {
+            createPlaylistPopup.classList.remove('show');
+        });
+    }
+
+    if (closeAddToPlaylistBtn && addToPlaylistPopup) {
+        closeAddToPlaylistBtn.addEventListener('click', () => {
+            addToPlaylistPopup.classList.remove('show');
+        });
+    }
+
+    if (savePlaylistBtn && newPlaylistNameInput && createPlaylistPopup) {
+        savePlaylistBtn.addEventListener('click', () => {
+            const name = newPlaylistNameInput.value.trim();
+            if (!name) return alert("Ketik nama playlist bang!");
+            const created = window.player.playlistManager.createCustomPlaylist(name);
+            if (created) {
+                createPlaylistPopup.classList.remove('show');
+                window.player.playlistManager.switchPlaylistMode(created.id);
+            }
+        });
+    }
+
+    // Mode tabs (All / Queue)
     const btnModeAll = document.getElementById('btn-mode-all');
     const btnModeNjoy = document.getElementById('btn-mode-njoy');
     if (btnModeAll) {
         btnModeAll.addEventListener('click', () => {
-            window.player.state.currentMode = 'all';
-            window.player.state.unplayedShuffle = [];
-            btnModeAll.classList.add('active');
-            if (btnModeNjoy) btnModeNjoy.classList.remove('active');
-            window.player.playlistManager.renderPlaylist();
+            window.player.playlistManager.switchPlaylistMode('all');
         });
     }
     if (btnModeNjoy) {
         btnModeNjoy.addEventListener('click', () => {
-            window.player.state.currentMode = 'njoy';
-            window.player.state.unplayedShuffle = [];
-            btnModeNjoy.classList.add('active');
-            if (btnModeAll) btnModeAll.classList.remove('active');
-            window.player.playlistManager.renderPlaylist();
+            window.player.playlistManager.switchPlaylistMode('njoy');
         });
     }
 
