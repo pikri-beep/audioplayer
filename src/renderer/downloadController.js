@@ -151,7 +151,6 @@ async function playStreamSong(videoItem, queueList = []) {
         if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
     }
 }
-}
 
 function updatePaginationControls() {
     const { searchResults, searchCurrentPage, searchResultsPerPage } = window.player.state;

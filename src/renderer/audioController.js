@@ -26,13 +26,13 @@ function syncToMiniPlayer() {
 }
 
 function togglePlay() {
-    const { playlist, currentMode, njoyList, currentSongIndex } = window.player.state;
+    const { playlist, currentMode, njoyList, currentSongIndex, isStreamMode } = window.player.state;
     const { audio, playBtn } = window.player.dom;
-    if (playlist.length === 0) return;
     
-    if (currentMode === 'njoy') {
+    if (playlist.length === 0 && !isStreamMode && (!audio.src || audio.src === '')) return;
+    
+    if (!isStreamMode && currentMode === 'njoy') {
         if (njoyList.length === 0) return;
-        // Jika lagu yang dimuat tidak ada dalam queue, muat lagu pertama di queue
         const currentSong = playlist[currentSongIndex];
         if (!njoyList.includes(currentSong)) {
             const firstQueueSong = njoyList[0];
@@ -55,6 +55,7 @@ function togglePlay() {
 function changeSongWithFade(newIndex) {
     const { playlist } = window.player.state;
     const { audio, playBtn, volumeSlider } = window.player.dom;
+    window.player.state.isStreamMode = false;
     if (playlist.length === 0) return;
     
     if (window.player.state.fadeOutInterval) clearInterval(window.player.state.fadeOutInterval);
