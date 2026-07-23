@@ -52,50 +52,67 @@ function togglePlay() {
     }
 }
 
+let fadingOutAudio = null;
+
 function changeSongWithFade(newIndex) {
     const { playlist } = window.player.state;
     const { audio, playBtn, volumeSlider } = window.player.dom;
     window.player.state.isStreamMode = false;
+    window.player.state.isCrossfadingNext = false; 
     if (playlist.length === 0) return;
     
-    if (window.player.state.fadeOutInterval) clearInterval(window.player.state.fadeOutInterval);
     if (window.player.state.fadeInInterval) clearInterval(window.player.state.fadeInInterval);
-    
     if (volumeSlider) window.player.state.targetVolume = volumeSlider.value / 100;
     
-    let currentVol = audio.volume;
-    window.player.state.fadeOutInterval = setInterval(() => {
-        if (currentVol > 0.05) {
-            currentVol -= 0.05; 
-            audio.volume = Math.max(0, currentVol);
-        } else {
-            clearInterval(window.player.state.fadeOutInterval);
-            window.player.state.fadeOutInterval = null;
-            audio.pause();
-            
-            // Panggil loadSong dari playlistManager
-            window.player.playlistManager.loadSong(newIndex);
-            
-            if (window.player.state.isMuted) {
-                audio.volume = 0;
-                audio.play().catch(e => console.log(e));
-                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-            } else {
-                audio.volume = 0; 
-                audio.play().catch(e => console.log(e));
-                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                window.player.state.fadeInInterval = setInterval(() => {
-                    if (audio.volume < window.player.state.targetVolume - 0.05) {
-                        audio.volume += 0.05; 
-                    } else {
-                        audio.volume = window.player.state.targetVolume;
-                        clearInterval(window.player.state.fadeInInterval);
-                        window.player.state.fadeInInterval = null;
-                    }
-                }, 40); 
-            }
+    if (!audio.paused && audio.src && audio.currentTime > 0) {
+        if (fadingOutAudio) {
+            fadingOutAudio.pause();
+            fadingOutAudio.src = '';
         }
-    }, 30); 
+        try {
+            fadingOutAudio = new Audio(audio.src);
+            fadingOutAudio.currentTime = audio.currentTime;
+            fadingOutAudio.volume = audio.volume;
+            fadingOutAudio.play().catch(e => console.log(e));
+            
+            let fadeOutVol = fadingOutAudio.volume;
+            const fadeOutInt = setInterval(() => {
+                if (fadeOutVol > 0.05) {
+                    fadeOutVol -= 0.05;
+                    if(fadingOutAudio) fadingOutAudio.volume = Math.max(0, fadeOutVol);
+                } else {
+                    clearInterval(fadeOutInt);
+                    if (fadingOutAudio) {
+                        fadingOutAudio.pause();
+                        fadingOutAudio.src = '';
+                        fadingOutAudio = null;
+                    }
+                }
+            }, 60); 
+        } catch(e) { console.error(e); }
+    }
+    
+    audio.pause();
+    window.player.playlistManager.loadSong(newIndex);
+    
+    if (window.player.state.isMuted) {
+        audio.volume = 0;
+        audio.play().catch(e => console.log(e));
+        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    } else {
+        audio.volume = 0; 
+        audio.play().catch(e => console.log(e));
+        playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        window.player.state.fadeInInterval = setInterval(() => {
+            if (audio.volume < window.player.state.targetVolume - 0.05) {
+                audio.volume += 0.05; 
+            } else {
+                audio.volume = window.player.state.targetVolume;
+                clearInterval(window.player.state.fadeInInterval);
+                window.player.state.fadeInInterval = null;
+            }
+        }, 50); 
+    }
 }
 
 function getSmartShuffleNextIndex(playlist, currentSongIndex) {

@@ -27,6 +27,14 @@ function initializeUiListeners() {
                 progressBar.value = (audio.currentTime / audio.duration) * 100;
                 let m = Math.floor(audio.currentTime / 60), s = Math.floor(audio.currentTime % 60);
                 currentTimeEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                
+                // Gapless Crossfade Trigger (4 seconds early)
+                if (audio.currentTime >= audio.duration - 4) {
+                    if (!window.player.state.isCrossfadingNext) {
+                        window.player.state.isCrossfadingNext = true;
+                        window.player.audio.nextSong(true);
+                    }
+                }
             }
 
             // --- LIRIK KARAOKE SYNC ---

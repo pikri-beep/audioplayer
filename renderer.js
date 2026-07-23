@@ -79,7 +79,8 @@ window.player = {
         streamQueue: [],
         streamQueueIndex: 0,
         currentStreamTrack: null,
-        prefetchedNextStream: null
+        prefetchedNextStream: null,
+        isCrossfadingNext: false
     }
 };
 

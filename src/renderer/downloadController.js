@@ -135,11 +135,50 @@ async function playStreamSong(videoItem, queueList = []) {
         }
 
         if (streamUrlToPlay) {
+            window.player.state.isCrossfadingNext = false;
+            
+            // Ephemeral Background Clone for Crossfade Overlap
+            if (!audio.paused && audio.src && audio.currentTime > 0) {
+                try {
+                    let clone = new Audio(audio.src);
+                    clone.currentTime = audio.currentTime;
+                    clone.volume = audio.volume;
+                    clone.play().catch(e => console.log(e));
+                    let vol = clone.volume;
+                    const fadeInt = setInterval(() => {
+                        if (vol > 0.05) {
+                            vol -= 0.05;
+                            clone.volume = Math.max(0, vol);
+                        } else {
+                            clearInterval(fadeInt);
+                            clone.pause();
+                            clone.src = '';
+                            clone = null;
+                        }
+                    }, 60);
+                } catch(e) {}
+            }
+
+            audio.pause();
             audio.src = streamUrlToPlay;
+            audio.volume = 0; // Fade In preparation
             audio.play().then(() => {
                 if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
                 if (songTitleEl) songTitleEl.innerText = videoItem.title;
                 if (songArtistEl) songArtistEl.innerText = videoItem.author || "YouTube Stream";
+                
+                // Fade In Execution
+                let fadeInVol = 0;
+                const targetVol = window.player.state.targetVolume || 0.7;
+                const inInt = setInterval(() => {
+                    if (fadeInVol < targetVol - 0.05) {
+                        fadeInVol += 0.05;
+                        audio.volume = fadeInVol;
+                    } else {
+                        audio.volume = targetVol;
+                        clearInterval(inInt);
+                    }
+                }, 50);
             }).catch(err => console.error("Stream play error:", err));
         } else {
             if (songTitleEl) songTitleEl.innerText = "Gagal memuat stream";
