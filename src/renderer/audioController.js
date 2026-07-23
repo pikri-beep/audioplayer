@@ -102,32 +102,53 @@ function getSmartShuffleNextIndex(playlist, currentSongIndex) {
     if (playlist.length <= 1) return 0;
     const currentSongName = playlist[currentSongIndex] || '';
     
-    // Parse current song artist
     let currentArtist = '';
     if (currentSongName.includes('-')) {
         currentArtist = currentSongName.split('-')[0].trim().toLowerCase();
     }
     
-    // Filter matching songs by same artist or similar vibe/keywords
+    if (!window.player.state.playHistory) window.player.state.playHistory = [];
+    if (!window.player.state.playHistory.includes(currentSongIndex)) {
+        window.player.state.playHistory.push(currentSongIndex);
+    }
+    
+    const maxHistory = Math.min(Math.floor(playlist.length / 2), 15);
+    while (window.player.state.playHistory.length > maxHistory) {
+        window.player.state.playHistory.shift();
+    }
+    
     const matchingIndices = [];
     playlist.forEach((song, idx) => {
-        if (idx === currentSongIndex) return;
+        if (window.player.state.playHistory.includes(idx)) return;
         const lowerSong = song.toLowerCase();
-        if (currentArtist && lowerSong.includes(currentArtist)) {
-            matchingIndices.push(idx);
-        }
+        const currentLower = currentSongName.toLowerCase();
+        
+        let isMatch = false;
+        if (currentArtist && lowerSong.includes(currentArtist)) isMatch = true;
+        else if (lowerSong.includes('acoustic') && currentLower.includes('acoustic')) isMatch = true;
+        else if (lowerSong.includes('cover') && currentLower.includes('cover')) isMatch = true;
+        else if (lowerSong.includes('live') && currentLower.includes('live')) isMatch = true;
+        else if (lowerSong.includes('remix') && currentLower.includes('remix')) isMatch = true;
+        
+        if (isMatch) matchingIndices.push(idx);
     });
     
     if (matchingIndices.length > 0) {
-        const randomIdx = Math.floor(Math.random() * matchingIndices.length);
-        return matchingIndices[randomIdx];
+        return matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
     }
     
-    // Fallback: Random selection avoiding exact current song
-    let nextIdx = Math.floor(Math.random() * playlist.length);
-    if (nextIdx === currentSongIndex && playlist.length > 1) {
-        nextIdx = (currentSongIndex + 1) % playlist.length;
+    const unplayedIndices = [];
+    for (let i = 0; i < playlist.length; i++) {
+        if (!window.player.state.playHistory.includes(i)) unplayedIndices.push(i);
     }
+    
+    if (unplayedIndices.length > 0) {
+        return unplayedIndices[Math.floor(Math.random() * unplayedIndices.length)];
+    }
+    
+    window.player.state.playHistory = [currentSongIndex];
+    let nextIdx = Math.floor(Math.random() * playlist.length);
+    if (nextIdx === currentSongIndex && playlist.length > 1) nextIdx = (currentSongIndex + 1) % playlist.length;
     return nextIdx;
 }
 
@@ -157,7 +178,24 @@ function nextSong(isAutomatic = false) {
             });
             return;
         } else if (shuffleMode === 'normal') {
-            nextIdx = Math.floor(Math.random() * streamQueue.length);
+            if (!window.player.state.streamPlayHistory) window.player.state.streamPlayHistory = [];
+            if (!window.player.state.streamPlayHistory.includes(streamQueueIndex)) {
+                window.player.state.streamPlayHistory.push(streamQueueIndex);
+            }
+            const maxStreamHistory = Math.min(Math.floor(streamQueue.length / 2), 15);
+            while (window.player.state.streamPlayHistory.length > maxStreamHistory) {
+                window.player.state.streamPlayHistory.shift();
+            }
+            const unplayed = [];
+            for (let i = 0; i < streamQueue.length; i++) {
+                if (!window.player.state.streamPlayHistory.includes(i)) unplayed.push(i);
+            }
+            if (unplayed.length > 0) {
+                nextIdx = unplayed[Math.floor(Math.random() * unplayed.length)];
+            } else {
+                window.player.state.streamPlayHistory = [streamQueueIndex];
+                nextIdx = Math.floor(Math.random() * streamQueue.length);
+            }
         }
         
         if (nextIdx < streamQueue.length) {
