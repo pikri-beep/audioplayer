@@ -20,7 +20,7 @@ function resetDefaultThemeColors() {
 }
 
 // ------------------------------------------------------------------
-// CUSTOM PLAYLIST DATA FUNCTIONS
+// CUSTOM PLAYLIST DATA STORAGE
 // ------------------------------------------------------------------
 function getCustomPlaylists() {
     try {
@@ -59,7 +59,6 @@ function createCustomPlaylist(name) {
     
     playlists.push(newPlaylist);
     saveCustomPlaylists(playlists);
-    renderCustomPlaylistTabs();
     return newPlaylist;
 }
 
@@ -77,10 +76,10 @@ async function deleteCustomPlaylist(playlistId) {
     const updated = playlists.filter(p => p.id !== playlistId);
     saveCustomPlaylists(updated);
     
-    if (window.player.state.currentMode === playlistId) {
-        switchPlaylistMode('all');
+    if (window.player.state.activePlaylistId === playlistId) {
+        window.player.state.activePlaylistId = null;
+        switchPlaylistTab('playlist');
     } else {
-        renderCustomPlaylistTabs();
         renderPlaylist();
     }
 }
@@ -105,16 +104,19 @@ function removeSongFromCustomPlaylist(playlistId, songName) {
     target.songs = target.songs.filter(s => s !== songName);
     saveCustomPlaylists(playlists);
     
-    if (window.player.state.currentMode === playlistId) {
-        switchPlaylistMode(playlistId);
+    if (window.player.state.activePlaylistId === playlistId) {
+        switchPlaylistTab('active_playlist');
     } else {
         renderPlaylist();
     }
     return true;
 }
 
-function switchPlaylistMode(modeId) {
-    window.player.state.currentMode = modeId;
+// ------------------------------------------------------------------
+// TAB SWITCHING & PLAYLIST SCOPING LOGIC
+// ------------------------------------------------------------------
+function switchPlaylistTab(tabName, customPlaylistId = null) {
+    window.player.state.currentTab = tabName; // 'all', 'active_playlist', 'playlist'
     const { songsFolder } = window.player.state;
     
     let allFiles = [];
@@ -125,48 +127,68 @@ function switchPlaylistMode(modeId) {
         });
     }
 
-    if (modeId === 'all') {
+    if (customPlaylistId) {
+        window.player.state.activePlaylistId = customPlaylistId;
+        window.player.state.currentTab = 'active_playlist';
+    }
+
+    const activePlId = window.player.state.activePlaylistId;
+
+    if (window.player.state.currentTab === 'all') {
         window.player.state.playlist = allFiles;
-    } else if (modeId === 'njoy') {
-        window.player.state.playlist = allFiles;
-    } else {
-        // Custom playlist mode
-        const playlists = getCustomPlaylists();
-        const customPl = playlists.find(p => p.id === modeId);
-        if (customPl) {
-            window.player.state.playlist = customPl.songs.filter(s => allFiles.includes(s));
+        window.player.state.currentMode = 'all';
+    } else if (window.player.state.currentTab === 'active_playlist') {
+        if (activePlId) {
+            const playlists = getCustomPlaylists();
+            const customPl = playlists.find(p => p.id === activePlId);
+            if (customPl) {
+                window.player.state.playlist = customPl.songs.filter(s => allFiles.includes(s));
+                window.player.state.currentMode = activePlId;
+            } else {
+                window.player.state.playlist = allFiles;
+                window.player.state.currentMode = 'all';
+                window.player.state.activePlaylistId = null;
+            }
         } else {
             window.player.state.playlist = allFiles;
+            window.player.state.currentMode = 'njoy';
         }
+    } else {
+        // 'playlist' tab: Playlist Manager Menu
+        window.player.state.playlist = allFiles;
     }
     
     window.player.state.unplayedShuffle = [];
-    window.player.state.currentSongIndex = 0;
-    renderCustomPlaylistTabs();
+    updateTabHeaderUI();
     renderPlaylist();
 }
 
-function renderCustomPlaylistTabs() {
-    const container = document.getElementById('custom-playlist-tabs');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    const playlists = getCustomPlaylists();
-    const activeMode = window.player.state.currentMode;
-    
+function updateTabHeaderUI() {
     const btnAll = document.getElementById('btn-mode-all');
-    const btnNjoy = document.getElementById('btn-mode-njoy');
-    if (btnAll) btnAll.className = `mode-btn ${activeMode === 'all' ? 'active' : ''}`;
-    if (btnNjoy) btnNjoy.className = `mode-btn ${activeMode === 'njoy' ? 'active' : ''}`;
+    const btnQueue = document.getElementById('btn-mode-queue');
+    const btnPlaylist = document.getElementById('btn-mode-playlist');
+    const queueText = document.getElementById('tab-queue-text');
     
-    playlists.forEach(pl => {
-        const btn = document.createElement('button');
-        btn.className = `mode-btn ${activeMode === pl.id ? 'active' : ''}`;
-        btn.style.whiteSpace = 'nowrap';
-        btn.innerHTML = `<i class="fa-solid fa-list-ul"></i> ${pl.name}`;
-        btn.addEventListener('click', () => switchPlaylistMode(pl.id));
-        container.appendChild(btn);
-    });
+    const currentTab = window.player.state.currentTab || 'all';
+    const activePlId = window.player.state.activePlaylistId;
+    
+    if (btnAll) btnAll.className = `mode-btn ${currentTab === 'all' ? 'active' : ''}`;
+    if (btnQueue) btnQueue.className = `mode-btn ${currentTab === 'active_playlist' ? 'active' : ''}`;
+    if (btnPlaylist) btnPlaylist.className = `mode-btn ${currentTab === 'playlist' ? 'active' : ''}`;
+    
+    if (queueText) {
+        if (activePlId) {
+            const playlists = getCustomPlaylists();
+            const customPl = playlists.find(p => p.id === activePlId);
+            if (customPl) {
+                queueText.innerHTML = `<i class="fa-solid fa-list-ul"></i> ${customPl.name}`;
+            } else {
+                queueText.innerHTML = `Queue`;
+            }
+        } else {
+            queueText.innerHTML = `Queue`;
+        }
+    }
 }
 
 function openAddToPlaylistModal(songName) {
@@ -182,16 +204,16 @@ function openAddToPlaylistModal(songName) {
     
     const playlists = getCustomPlaylists();
     if (playlists.length === 0) {
-        list.innerHTML = '<li style="color:#aaa; font-size:12px; text-align:center; padding:10px;">Belum ada playlist kustom. Klik "+ Baru" di atas untuk membuat playlist!</li>';
+        list.innerHTML = '<li style="color:#aaa; font-size:12px; text-align:center; padding:15px; background:transparent; border:none;">Belum ada playlist kustom. Buka tab "Playlist" lalu buat playlist baru!</li>';
     } else {
         playlists.forEach(pl => {
             const isAlreadyAdded = pl.songs.includes(songName);
             const li = document.createElement('li');
-            li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer; font-size:13px;';
+            li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:10px; cursor:pointer; font-size:13px; border:1px solid rgba(255,255,255,0.08); transition:0.2s;';
             
             li.innerHTML = `
-                <span><i class="fa-solid fa-folder"></i> ${pl.name} (${pl.songs.length} lagu)</span>
-                <button class="mode-btn ${isAlreadyAdded ? '' : 'active'}" style="padding:4px 10px; font-size:11px;">
+                <span><i class="fa-solid fa-folder" style="color:var(--theme-glow); margin-right:6px;"></i> ${pl.name} (${pl.songs.length} lagu)</span>
+                <button class="mode-btn ${isAlreadyAdded ? '' : 'active'}" style="padding:4px 10px; font-size:11px; flex:none;">
                     ${isAlreadyAdded ? '<i class="fa-solid fa-check"></i> Ada' : '<i class="fa-solid fa-plus"></i> Tambah'}
                 </button>
             `;
@@ -213,7 +235,7 @@ function openAddToPlaylistModal(songName) {
 }
 
 // ------------------------------------------------------------------
-// PLAYLIST RENDER & PLAYBACK FUNCTIONS
+// RENDER PLAYLIST LIST & PLAYLIST MANAGER MENU
 // ------------------------------------------------------------------
 function loadPlaylist(isInitial = false) {
     const { audio, songTitleEl, songArtistEl, playBtn } = window.player.dom;
@@ -223,7 +245,7 @@ function loadPlaylist(isInitial = false) {
         if (!fs.existsSync(songsFolder)) fs.mkdirSync(songsFolder);
         const oldSongName = window.player.state.playlist[window.player.state.currentSongIndex];
         
-        switchPlaylistMode(window.player.state.currentMode || 'all');
+        switchPlaylistTab(window.player.state.currentTab || 'all');
         
         const playlist = window.player.state.playlist;
         if (playlist.length > 0) {
@@ -237,8 +259,6 @@ function loadPlaylist(isInitial = false) {
             } else {
                 window.player.state.currentSongIndex = 0;
             }
-            renderCustomPlaylistTabs();
-            renderPlaylist();
             
             if (isInitial || !audio.src || audio.src === '' || audio.src.endsWith('/undefined') || audio.src.endsWith('\\undefined')) {
                 loadSong(window.player.state.currentSongIndex);
@@ -258,177 +278,274 @@ function loadPlaylist(isInitial = false) {
 
 function renderPlaylist() {
     const { playlistUl } = window.player.dom;
-    const { playlist, currentSongIndex, njoyList, currentMode } = window.player.state;
+    const { playlist, currentSongIndex, njoyList, currentTab, activePlaylistId } = window.player.state;
+    const searchBar = document.getElementById('search-bar');
+    const searchQuery = searchBar ? searchBar.value.trim().toLowerCase() : '';
     
     if (!playlistUl) return;
     playlistUl.innerHTML = '';
     
-    if (currentMode === 'njoy') {
-        // Mode Queue: Iterasi FIFO njoyList
-        njoyList.forEach((song) => {
-            const mainIndex = playlist.indexOf(song);
-            if (mainIndex === -1) return;
-            
-            const li = document.createElement('li');
-            if (mainIndex === currentSongIndex) li.classList.add('active');
-            
-            const span = document.createElement('span');
-            span.innerText = path.parse(song).name;
-            span.style.flexGrow = '1';
-            span.addEventListener('click', () => { 
-                window.player.state.currentSongIndex = mainIndex; 
-                window.player.audio.changeSongWithFade(mainIndex);
-            });
-            
-            const heartBtn = document.createElement('button');
-            heartBtn.className = 'heart-btn liked';
-            heartBtn.innerHTML = '<i class="fa-solid fa-heart"></i>';
-            heartBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
-                localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
-                renderPlaylist();
-            });
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            deleteBtn.title = 'Hapus Lagu dari Disk';
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteSong(song);
-            });
-
-            li.appendChild(span);
-            li.appendChild(heartBtn);
-            li.appendChild(deleteBtn);
-            playlistUl.appendChild(li);
-        });
-    } else if (currentMode !== 'all' && currentMode !== 'njoy') {
-        // Mode Custom Playlist
+    // ------------------------------------------------------------------
+    // TAB 3: PLAYLIST MANAGER MENU
+    // ------------------------------------------------------------------
+    if (currentTab === 'playlist') {
         const playlists = getCustomPlaylists();
-        const customPl = playlists.find(p => p.id === currentMode);
         
-        if (customPl) {
-            // Header bar untuk playlist kustom
-            const headerLi = document.createElement('li');
-            headerLi.style.cssText = 'background: rgba(255,255,255,0.08); border-color: var(--theme-glow); margin-bottom: 12px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center;';
-            headerLi.innerHTML = `
-                <span><i class="fa-solid fa-folder-open" style="color:var(--theme-glow)"></i> ${customPl.name} (${playlist.length} lagu)</span>
-                <button id="delete-this-playlist-btn" class="mode-btn" style="padding:4px 10px; font-size:11px; color:#ef4444; border-color:rgba(239,68,68,0.4);">
-                    <i class="fa-solid fa-folder-minus"></i> Hapus Playlist
-                </button>
-            `;
-            playlistUl.appendChild(headerLi);
-            
-            const delPlBtn = headerLi.querySelector('#delete-this-playlist-btn');
-            if (delPlBtn) {
-                delPlBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    deleteCustomPlaylist(currentMode);
-                });
-            }
-        }
-
-        if (playlist.length === 0) {
+        // Button: Create New Playlist
+        const createLi = document.createElement('li');
+        createLi.style.cssText = 'background: rgba(255, 255, 255, 0.06); border: 1px dashed var(--theme-glow); border-radius: 12px; padding: 12px; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; color: var(--theme-glow); font-weight: 600; font-size: 13px; margin-bottom: 10px; transition: 0.2s;';
+        createLi.innerHTML = '<i class="fa-solid fa-folder-plus"></i> Buat Playlist Baru';
+        createLi.addEventListener('click', () => {
+            const createModal = document.getElementById('create-playlist-popup');
+            const input = document.getElementById('new-playlist-name');
+            if (input) input.value = '';
+            if (createModal) createModal.classList.add('show');
+        });
+        playlistUl.appendChild(createLi);
+        
+        if (playlists.length === 0) {
             const emptyLi = document.createElement('li');
-            emptyLi.style.cssText = 'color:#aaa; text-align:center; font-size:12px; padding:15px;';
-            emptyLi.innerText = 'Playlist ini masih kosong. Pindah ke tab "Semua" lalu klik (+) pada lagu untuk memasukkan lagu!';
+            emptyLi.style.cssText = 'color:#aaa; text-align:center; font-size:12px; padding:20px; background:transparent; border:none;';
+            emptyLi.innerText = 'Belum ada playlist kustom. Klik "Buat Playlist Baru" di atas!';
             playlistUl.appendChild(emptyLi);
             return;
         }
 
-        playlist.forEach((song, index) => {
+        playlists.forEach(pl => {
+            if (searchQuery && !pl.name.toLowerCase().includes(searchQuery)) return;
+
             const li = document.createElement('li');
-            if (index === currentSongIndex) li.classList.add('active');
+            li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; margin-bottom:6px; transition:0.2s;';
             
-            const span = document.createElement('span');
-            span.innerText = path.parse(song).name;
-            span.style.flexGrow = '1';
-            span.addEventListener('click', () => { 
-                window.player.state.currentSongIndex = index; 
-                window.player.audio.changeSongWithFade(index);
+            const isCurrentlyActive = (activePlaylistId === pl.id);
+            if (isCurrentlyActive) {
+                li.style.borderColor = 'var(--theme-glow)';
+                li.style.background = 'rgba(255,255,255,0.08)';
+            }
+            
+            li.innerHTML = `
+                <div style="display:flex; flex-direction:column; gap:2px; flex-grow:1; overflow:hidden; margin-right:10px;">
+                    <span style="font-weight:600; font-size:14px; color:${isCurrentlyActive ? 'var(--theme-glow)' : '#fff'}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        <i class="fa-solid fa-folder" style="color:var(--theme-glow); margin-right:6px;"></i>${pl.name}
+                    </span>
+                    <span style="font-size:11px; color:#94a3b8;">${pl.songs.length} lagu ${isCurrentlyActive ? '• (Sedang Diputar)' : ''}</span>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="mode-btn active play-pl-btn" style="padding:6px 12px; font-size:11px; flex:none;">
+                        <i class="fa-solid fa-play"></i> Putar
+                    </button>
+                    <button class="delete-btn del-pl-btn" title="Hapus Playlist" style="padding:6px; font-size:13px; color:#ef4444; background:none; border:none; cursor:pointer;">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Event: Play / Switch to Custom Playlist
+            li.querySelector('.play-pl-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                switchPlaylistTab('active_playlist', pl.id);
             });
             
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'delete-btn';
-            removeBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
-            removeBtn.title = 'Keluarkan dari Playlist ini';
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                removeSongFromCustomPlaylist(currentMode, song);
+            li.addEventListener('click', () => {
+                switchPlaylistTab('active_playlist', pl.id);
             });
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            deleteBtn.title = 'Hapus File dari Disk';
-            deleteBtn.addEventListener('click', (e) => {
+            
+            // Event: Delete Custom Playlist
+            li.querySelector('.del-pl-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
-                deleteSong(song);
+                deleteCustomPlaylist(pl.id);
             });
-
-            li.appendChild(span);
-            li.appendChild(removeBtn);
-            li.appendChild(deleteBtn);
+            
             playlistUl.appendChild(li);
         });
-    } else {
-        // Mode Semua Lagu
-        playlist.forEach((song, index) => {
-            const isLiked = njoyList.includes(song);
-            
-            const li = document.createElement('li');
-            if (index === currentSongIndex) li.classList.add('active');
-            
-            const span = document.createElement('span');
-            span.innerText = path.parse(song).name;
-            span.style.flexGrow = '1';
-            span.addEventListener('click', () => { 
-                window.player.state.currentSongIndex = index; 
-                window.player.audio.changeSongWithFade(index);
-            });
-            
-            const addPlBtn = document.createElement('button');
-            addPlBtn.className = 'sub-control-btn';
-            addPlBtn.style.cssText = 'background:none; border:none; color:var(--theme-glow); font-size:14px; cursor:pointer; padding:4px 6px;';
-            addPlBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i>';
-            addPlBtn.title = 'Tambahkan ke Playlist';
-            addPlBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openAddToPlaylistModal(song);
-            });
 
-            const heartBtn = document.createElement('button');
-            heartBtn.className = `heart-btn ${isLiked ? 'liked' : ''}`;
-            heartBtn.innerHTML = isLiked ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
-            heartBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (window.player.state.njoyList.includes(song)) {
-                    window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
-                } else {
-                    window.player.state.njoyList.push(song);
-                }
-                localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
-                renderPlaylist();
-            });
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
-            deleteBtn.title = 'Hapus File dari Disk';
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteSong(song);
-            });
-
-            li.appendChild(span);
-            li.appendChild(addPlBtn);
-            li.appendChild(heartBtn);
-            li.appendChild(deleteBtn);
-            playlistUl.appendChild(li);
-        });
+        return;
     }
+
+    // ------------------------------------------------------------------
+    // TAB 2: ACTIVE PLAYLIST / QUEUE VIEW
+    // ------------------------------------------------------------------
+    if (currentTab === 'active_playlist') {
+        if (activePlaylistId) {
+            // Viewing Custom Playlist
+            const playlists = getCustomPlaylists();
+            const customPl = playlists.find(p => p.id === activePlaylistId);
+            
+            if (customPl) {
+                const headerLi = document.createElement('li');
+                headerLi.style.cssText = 'background: rgba(255,255,255,0.06); border-color: var(--theme-glow); margin-bottom: 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; padding: 10px 12px;';
+                headerLi.innerHTML = `
+                    <span style="font-weight:bold; color:var(--theme-glow);"><i class="fa-solid fa-folder-open"></i> ${customPl.name} (${playlist.length} lagu)</span>
+                    <button id="clear-active-playlist-btn" class="mode-btn" style="padding:4px 8px; font-size:10px; color:#ef4444; border:1px solid rgba(239,68,68,0.4);">
+                        <i class="fa-solid fa-arrow-left"></i> Kembali ke Queue
+                    </button>
+                `;
+                playlistUl.appendChild(headerLi);
+                
+                headerLi.querySelector('#clear-active-playlist-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.player.state.activePlaylistId = null;
+                    switchPlaylistTab('active_playlist');
+                });
+            }
+
+            if (playlist.length === 0) {
+                const emptyLi = document.createElement('li');
+                emptyLi.style.cssText = 'color:#aaa; text-align:center; font-size:12px; padding:20px; background:transparent; border:none;';
+                emptyLi.innerText = 'Playlist ini masih kosong. Pindah ke tab "Semua" lalu klik (+) pada lagu untuk memasukkan lagu!';
+                playlistUl.appendChild(emptyLi);
+                return;
+            }
+
+            playlist.forEach((song, index) => {
+                if (searchQuery && !song.toLowerCase().includes(searchQuery)) return;
+
+                const li = document.createElement('li');
+                if (index === currentSongIndex) li.classList.add('active');
+                
+                const span = document.createElement('span');
+                span.innerText = path.parse(song).name;
+                span.style.flexGrow = '1';
+                span.addEventListener('click', () => { 
+                    window.player.state.currentSongIndex = index; 
+                    window.player.audio.changeSongWithFade(index);
+                });
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'delete-btn';
+                removeBtn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                removeBtn.title = 'Keluarkan dari Playlist ini';
+                removeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeSongFromCustomPlaylist(activePlaylistId, song);
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                deleteBtn.title = 'Hapus File dari Disk';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteSong(song);
+                });
+
+                li.appendChild(span);
+                li.appendChild(removeBtn);
+                li.appendChild(deleteBtn);
+                playlistUl.appendChild(li);
+            });
+            return;
+        } else {
+            // Viewing Default FIFO Queue
+            if (njoyList.length === 0) {
+                const emptyLi = document.createElement('li');
+                emptyLi.style.cssText = 'color:#aaa; text-align:center; font-size:12px; padding:20px; background:transparent; border:none;';
+                emptyLi.innerText = 'Queue antrean kosong. Klik ikon hati (♥) pada lagu di tab "Semua" untuk menambah ke Queue!';
+                playlistUl.appendChild(emptyLi);
+                return;
+            }
+
+            njoyList.forEach((song) => {
+                if (searchQuery && !song.toLowerCase().includes(searchQuery)) return;
+                const mainIndex = playlist.indexOf(song);
+                if (mainIndex === -1) return;
+                
+                const li = document.createElement('li');
+                if (mainIndex === currentSongIndex) li.classList.add('active');
+                
+                const span = document.createElement('span');
+                span.innerText = path.parse(song).name;
+                span.style.flexGrow = '1';
+                span.addEventListener('click', () => { 
+                    window.player.state.currentSongIndex = mainIndex; 
+                    window.player.audio.changeSongWithFade(mainIndex);
+                });
+                
+                const heartBtn = document.createElement('button');
+                heartBtn.className = 'heart-btn liked';
+                heartBtn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                heartBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
+                    localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
+                    renderPlaylist();
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+                deleteBtn.title = 'Hapus File dari Disk';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteSong(song);
+                });
+
+                li.appendChild(span);
+                li.appendChild(heartBtn);
+                li.appendChild(deleteBtn);
+                playlistUl.appendChild(li);
+            });
+            return;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // TAB 1: ALL SONGS VIEW
+    // ------------------------------------------------------------------
+    playlist.forEach((song, index) => {
+        if (searchQuery && !song.toLowerCase().includes(searchQuery)) return;
+        const isLiked = njoyList.includes(song);
+        
+        const li = document.createElement('li');
+        if (index === currentSongIndex) li.classList.add('active');
+        
+        const span = document.createElement('span');
+        span.innerText = path.parse(song).name;
+        span.style.flexGrow = '1';
+        span.addEventListener('click', () => { 
+            window.player.state.currentSongIndex = index; 
+            window.player.audio.changeSongWithFade(index);
+        });
+        
+        const addPlBtn = document.createElement('button');
+        addPlBtn.className = 'sub-control-btn';
+        addPlBtn.style.cssText = 'background:none; border:none; color:var(--theme-glow); font-size:14px; cursor:pointer; padding:4px 6px;';
+        addPlBtn.innerHTML = '<i class="fa-solid fa-folder-plus"></i>';
+        addPlBtn.title = 'Tambahkan ke Playlist';
+        addPlBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openAddToPlaylistModal(song);
+        });
+
+        const heartBtn = document.createElement('button');
+        heartBtn.className = `heart-btn ${isLiked ? 'liked' : ''}`;
+        heartBtn.innerHTML = isLiked ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
+        heartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.player.state.njoyList.includes(song)) {
+                window.player.state.njoyList = window.player.state.njoyList.filter(item => item !== song);
+            } else {
+                window.player.state.njoyList.push(song);
+            }
+            localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
+            renderPlaylist();
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fa-solid fa-trash-can"></i>';
+        deleteBtn.title = 'Hapus File dari Disk';
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSong(song);
+        });
+
+        li.appendChild(span);
+        li.appendChild(addPlBtn);
+        li.appendChild(heartBtn);
+        li.appendChild(deleteBtn);
+        playlistUl.appendChild(li);
+    });
 }
 
 function showCustomConfirm(title, message) {
@@ -462,13 +579,13 @@ function showCustomConfirm(title, message) {
 }
 
 async function deleteSong(songName) {
-    const { songsFolder, njoyList, playlist, currentSongIndex } = window.player.state;
+    const { songsFolder, njoyList, currentSongIndex } = window.player.state;
     const { audio, songTitleEl, songArtistEl, playBtn } = window.player.dom;
     
     const songCleanName = path.parse(songName).name;
     const confirmed = await showCustomConfirm(
         "Hapus Lagu?",
-        `Apakah Anda yakin ingin menghapus lagu "${songCleanName}"?`
+        `Apakah Anda yakin ingin menghapus lagu "${songCleanName}" dari disk?`
     );
     if (!confirmed) return;
     
@@ -494,7 +611,7 @@ async function deleteSong(songName) {
             localStorage.setItem('njoyList', JSON.stringify(window.player.state.njoyList));
         }
         
-        switchPlaylistMode(window.player.state.currentMode || 'all');
+        switchPlaylistTab(window.player.state.currentTab || 'all');
         const newPlaylist = window.player.state.playlist;
         
         if (newPlaylist.length === 0) {
@@ -522,7 +639,7 @@ async function deleteSong(songName) {
 
 function loadSong(index) {
     const { playlist, songsFolder } = window.player.state;
-    const { audio, songTitleEl, songArtistEl, playBtn } = window.player.dom;
+    const { audio, songTitleEl, songArtistEl } = window.player.dom;
     
     if (playlist.length === 0) return;
     if (index < 0 || index >= playlist.length) {
@@ -616,7 +733,7 @@ async function extractMetadata(filePath, cleanName) {
     }
 }
 
-// Daftarkan ke Global Registry
+// Global Registry
 window.player.playlistManager = {
     resetDefaultThemeColors,
     loadPlaylist,
@@ -631,7 +748,6 @@ window.player.playlistManager = {
     deleteCustomPlaylist,
     addSongToCustomPlaylist,
     removeSongFromCustomPlaylist,
-    switchPlaylistMode,
-    renderCustomPlaylistTabs,
+    switchPlaylistTab,
     openAddToPlaylistModal
 };

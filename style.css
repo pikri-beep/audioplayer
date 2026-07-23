@@ -231,67 +231,125 @@ body {
 }
 
 .popup-content {
-    background: #1e1e1e;
-    padding: 25px;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 355px;
-    max-height: 70vh;
+    background: rgba(22, 22, 30, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 22px;
+    border-radius: 20px;
+    width: 92%;
+    max-width: 410px;
+    max-height: 75vh;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 0, 0, 0.4);
 }
 
 .popup-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     margin-bottom: 15px;
+}
+
+.playlist-mode-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 4px;
+    border-radius: 12px;
+    gap: 4px;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .mode-btn {
     flex: 1;
-    padding: 8px;
-    background: #282828;
+    padding: 8px 10px;
+    background: transparent;
     border: none;
-    color: #aaa;
+    color: #94a3b8;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.mode-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .mode-btn.active {
     background: var(--theme-glow);
-    color: #fff;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 0 12px var(--theme-glow);
 }
 
 #search-bar {
     width: 100%;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #333;
-    background: #282828;
-    color: #fff;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#search-bar:focus {
+    border-color: var(--theme-glow);
+    box-shadow: 0 0 8px var(--theme-glow);
 }
 
 #playlist-ul {
     list-style: none;
     overflow-y: auto;
     margin-top: 10px;
-    flex: 1; /* Biar list lagunya ngalah dan ngisi sisa ruang aja */
-    min-height: 0; /* Mencegah list lagunya bablas keluar dari batas popup */
-    max-height: 220px;
-    padding-right: 5px;
+    flex: 1;
+    min-height: 0;
+    max-height: 320px;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 #playlist-ul li {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    padding: 10px;
-    border-bottom: 1px solid #282828;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#playlist-ul li:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 #playlist-ul li.active {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--theme-glow);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+#playlist-ul li.active span {
     color: var(--theme-glow);
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .heart-btn {

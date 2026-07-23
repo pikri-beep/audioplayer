@@ -162,22 +162,29 @@ function initializeUiListeners() {
             const created = window.player.playlistManager.createCustomPlaylist(name);
             if (created) {
                 createPlaylistPopup.classList.remove('show');
-                window.player.playlistManager.switchPlaylistMode(created.id);
+                window.player.playlistManager.switchPlaylistTab('active_playlist', created.id);
             }
         });
     }
 
-    // Mode tabs (All / Queue)
+    // Mode tabs (Semua / Queue / Playlist)
     const btnModeAll = document.getElementById('btn-mode-all');
-    const btnModeNjoy = document.getElementById('btn-mode-njoy');
+    const btnModeQueue = document.getElementById('btn-mode-queue');
+    const btnModePlaylist = document.getElementById('btn-mode-playlist');
+    
     if (btnModeAll) {
         btnModeAll.addEventListener('click', () => {
-            window.player.playlistManager.switchPlaylistMode('all');
+            window.player.playlistManager.switchPlaylistTab('all');
         });
     }
-    if (btnModeNjoy) {
-        btnModeNjoy.addEventListener('click', () => {
-            window.player.playlistManager.switchPlaylistMode('njoy');
+    if (btnModeQueue) {
+        btnModeQueue.addEventListener('click', () => {
+            window.player.playlistManager.switchPlaylistTab('active_playlist');
+        });
+    }
+    if (btnModePlaylist) {
+        btnModePlaylist.addEventListener('click', () => {
+            window.player.playlistManager.switchPlaylistTab('playlist');
         });
     }
 
@@ -190,14 +197,9 @@ function initializeUiListeners() {
 
     // Playlist Search Filter
     const searchBar = document.getElementById('search-bar');
-    if (searchBar && playlistUl) {
-        searchBar.addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const songItems = playlistUl.getElementsByTagName('li');
-            Array.from(songItems).forEach(item => {
-                const songName = item.textContent.toLowerCase();
-                item.style.display = songName.includes(searchTerm) ? 'flex' : 'none'; 
-            });
+    if (searchBar) {
+        searchBar.addEventListener('input', () => {
+            window.player.playlistManager.renderPlaylist();
         });
     }
 
