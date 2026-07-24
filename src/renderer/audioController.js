@@ -174,14 +174,25 @@ function nextSong(isAutomatic = false) {
     const shuffleMode = window.player.state.shuffleMode || (window.player.state.isShuffle ? 'normal' : 'off');
     const auto = isAutomatic === true;
 
+    // Direct clean repeat handling (prevents echo/clone artifacts when repeating same track)
+    if (auto && isRepeat) {
+        const { audio, playBtn } = window.player.dom;
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().then(() => {
+                if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            }).catch(e => console.log(e));
+        }
+        window.player.state.isCrossfadingNext = false;
+        return;
+    }
+
     // Handle Streaming Mode Playback
     if (isStreamMode) {
         if (!streamQueue || streamQueue.length === 0) return;
         
         let nextIdx = (streamQueueIndex !== undefined ? streamQueueIndex : 0) + 1;
-        if (auto && isRepeat) {
-            nextIdx = streamQueueIndex;
-        } else if (shuffleMode === 'smart') {
+        if (shuffleMode === 'smart') {
             // Smart Shuffle ✨ for streaming: Fetch related tracks of current song artist/vibe
             const currentTitle = currentStreamTrack ? (currentStreamTrack.author + " " + currentStreamTrack.title) : "popular music";
             ipcRenderer.invoke('get-related-tracks', currentTitle).then(related => {

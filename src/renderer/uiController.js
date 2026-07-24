@@ -27,8 +27,8 @@ function initializeUiListeners() {
                 progressBar.value = (audio.currentTime / audio.duration) * 100;
                 let m = Math.floor(audio.currentTime / 60), s = Math.floor(audio.currentTime % 60);
                 currentTimeEl.innerText = `${m}:${s < 10 ? '0'+s : s}`;
-                // Smart dB Silence Trimming & Gapless Crossfade
-                if (!audio.paused && audio.currentTime >= audio.duration - 15 && !window.player.state.isCrossfadingNext) {
+                // Smart dB Silence Trimming & Gapless Crossfade (Bypassed if Repeat Mode is ON)
+                if (!audio.paused && !window.player.state.isRepeat && audio.currentTime >= audio.duration - 15 && !window.player.state.isCrossfadingNext) {
                     let shouldCrossfade = false;
                     
                     if (audio.currentTime >= audio.duration - 3) {
