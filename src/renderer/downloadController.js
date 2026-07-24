@@ -112,6 +112,14 @@ async function playStreamSong(videoItem, queueList = []) {
         if (window.player.state.streamQueueIndex === -1) window.player.state.streamQueueIndex = 0;
     }
     
+    // Repeat mode fix for streaming: If repeating the exact same track, restart currentTime cleanly
+    if (window.player.state.currentStreamTrack && window.player.state.currentStreamTrack.url === videoItem.url && audio.src && !audio.paused) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log(e));
+        if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        return;
+    }
+
     window.player.state.currentStreamTrack = videoItem;
     window.player.state.isStreamMode = true;
     window.player.state.prefetchedNextStream = null;

@@ -1,3 +1,14 @@
+if (typeof globalThis.File === 'undefined') {
+    const { Blob } = require('buffer');
+    globalThis.File = class File extends Blob {
+        constructor(fileBits, fileName, options = {}) {
+            super(fileBits, options);
+            this.name = fileName;
+            this.lastModified = options.lastModified || Date.now();
+        }
+    };
+}
+
 const { ipcMain, app } = require('electron');
 const path = require('path');
 const fs = require('fs');

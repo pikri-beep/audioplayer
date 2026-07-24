@@ -1,3 +1,15 @@
+// Polyfill globalThis.File untuk undici / fetch di Electron Main Process
+if (typeof globalThis.File === 'undefined') {
+    const { Blob } = require('buffer');
+    globalThis.File = class File extends Blob {
+        constructor(fileBits, fileName, options = {}) {
+            super(fileBits, options);
+            this.name = fileName;
+            this.lastModified = options.lastModified || Date.now();
+        }
+    };
+}
+
 const { app, globalShortcut, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');

@@ -64,11 +64,19 @@ function togglePlay() {
 let fadingOutAudio = null;
 
 function changeSongWithFade(newIndex) {
-    const { playlist } = window.player.state;
+    const { playlist, currentSongIndex } = window.player.state;
     const { audio, playBtn, volumeSlider } = window.player.dom;
     window.player.state.isStreamMode = false;
     window.player.state.isCrossfadingNext = false; 
     if (playlist.length === 0) return;
+    
+    // Repeat mode fix: If repeating the exact same song, restart cleanly without clone echo
+    if (newIndex === currentSongIndex && audio.src && !audio.paused) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log(e));
+        if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        return;
+    }
     
     if (window.player.state.fadeInInterval) clearInterval(window.player.state.fadeInInterval);
     if (volumeSlider) window.player.state.targetVolume = volumeSlider.value / 100;

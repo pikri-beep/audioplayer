@@ -3,28 +3,35 @@
 function setupMediaSession() {
     if ('mediaSession' in navigator) {
         console.log("📱 [Android MediaSession] Initializing Lockscreen & Notification Controls...");
+        
+        const safeSetAction = (action, handler) => {
+            try {
+                navigator.mediaSession.setActionHandler(action, handler);
+            } catch (e) {
+                console.warn(`[MediaSession] Action ${action} not supported:`, e.message);
+            }
+        };
 
-        // Handler untuk aksi tombol hardware / lockscreen Android
-        navigator.mediaSession.setActionHandler('play', () => {
+        safeSetAction('play', () => {
             if (window.player && window.player.audio && window.player.audio.togglePlay) {
                 window.player.audio.togglePlay();
             }
         });
 
-        navigator.mediaSession.setActionHandler('pause', () => {
+        safeSetAction('pause', () => {
             if (window.player && window.player.audio && window.player.audio.togglePlay) {
                 window.player.audio.togglePlay();
             }
         });
 
-        navigator.mediaSession.setActionHandler('previoustrack', () => {
-            if (window.player && window.player.audio && window.player.audio.prevSong) {
+        safeSetAction('previoustrack', () => {
+            if (window.player.audio && window.player.audio.prevSong) {
                 window.player.audio.prevSong(false);
             }
         });
 
-        navigator.mediaSession.setActionHandler('nexttrack', () => {
-            if (window.player && window.player.audio && window.player.audio.nextSong) {
+        safeSetAction('nexttrack', () => {
+            if (window.player.audio && window.player.audio.nextSong) {
                 window.player.audio.nextSong(false);
             }
         });
