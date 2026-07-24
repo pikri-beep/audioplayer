@@ -27,6 +27,11 @@
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.2",
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "music-metadata": "^11.13.0",
     "node-vibrant": "^4.0.4",
     "yt-search": "^2.13.1"
