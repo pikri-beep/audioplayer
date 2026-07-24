@@ -27,6 +27,7 @@ function updateBoostUI(percent) {
 }
 
 function checkVolumeBoostFile() {
+    if (typeof require === 'undefined') return; // Android WebView: skip
     const fs = require('fs');
     const path = require('path');
     try {

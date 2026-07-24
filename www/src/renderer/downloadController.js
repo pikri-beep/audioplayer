@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer } = (typeof require !== 'undefined' && require('electron')) ? require('electron') : { ipcRenderer: null };
 
 function handleDownloadResult(result) {
     const { ytStatusText, ytPopup, ytUrlInput } = window.player.dom;
@@ -72,6 +72,12 @@ function renderSearchResultsPage() {
             if (dlPopup) dlPopup.classList.add('show');
             
             // Jalankan download secara asinkron (non-blocking)
+            if (!ipcRenderer) {
+                newDownload.status = 'failed';
+                renderDownloadManager();
+                updateDownloadBadge();
+                return;
+            }
             ipcRenderer.invoke('download-yt', video.url).then(result => {
                 if (result.success) {
                     newDownload.status = 'success';
@@ -113,7 +119,7 @@ async function playStreamSong(videoItem, queueList = []) {
     }
     
     // Repeat mode fix for streaming: If repeating the exact same track, restart currentTime cleanly
-    if (window.player.state.currentStreamTrack && window.player.state.currentStreamTrack.url === videoItem.url && audio.src && !audio.paused) {
+    if (window.player.state.currentStreamTrack && window.player.state.currentStreamTrack.url === videoItem.url && audio.src) {
         audio.currentTime = 0;
         audio.play().catch(e => console.log(e));
         if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
@@ -283,6 +289,12 @@ function initializeDownloadListeners() {
                 if (dlPopup) dlPopup.classList.add('show');
                 
                 const ipcChannel = isSpotify ? 'download-spotify' : 'download-yt';
+                if (!ipcRenderer) {
+                    newDownload.status = 'failed';
+                    renderDownloadManager();
+                    updateDownloadBadge();
+                    return;
+                }
                 ipcRenderer.invoke(ipcChannel, query).then(result => {
                     if (result.success) {
                         newDownload.status = 'success';

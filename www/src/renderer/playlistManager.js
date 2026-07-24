@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const { ipcRenderer } = require('electron');
-const { Vibrant } = require('node-vibrant/node');
+const fs = (typeof require !== 'undefined') ? require('fs') : null;
+const path = (typeof require !== 'undefined') ? require('path') : null;
+const { ipcRenderer } = (typeof require !== 'undefined' && require('electron')) ? require('electron') : { ipcRenderer: null };
+const Vibrant = (typeof require !== 'undefined') ? (() => { try { return require('node-vibrant/node').Vibrant; } catch(e) { return null; } })() : null;
 
-const playlistsFilePath = path.join(__dirname, '../../playlists.json');
+const playlistsFilePath = (path && typeof __dirname !== 'undefined') ? path.join(__dirname, '../../playlists.json') : null;
 
 function resetDefaultThemeColors() {
     const currentTheme = document.body.getAttribute('data-theme') || 'default';
@@ -24,6 +24,7 @@ function resetDefaultThemeColors() {
 // ------------------------------------------------------------------
 function getCustomPlaylists() {
     try {
+        if (!fs || !playlistsFilePath) return [];
         if (fs.existsSync(playlistsFilePath)) {
             return JSON.parse(fs.readFileSync(playlistsFilePath, 'utf8'));
         }
@@ -35,6 +36,7 @@ function getCustomPlaylists() {
 
 function saveCustomPlaylists(playlists) {
     try {
+        if (!fs || !playlistsFilePath) return;
         fs.writeFileSync(playlistsFilePath, JSON.stringify(playlists, null, 2));
     } catch (e) {
         console.error("Gagal menyimpan playlists.json:", e);
@@ -120,7 +122,7 @@ function switchPlaylistTab(tabName, customPlaylistId = null) {
     const { songsFolder } = window.player.state;
     
     let allFiles = [];
-    if (fs.existsSync(songsFolder)) {
+    if (fs && fs.existsSync(songsFolder)) {
         allFiles = fs.readdirSync(songsFolder).filter(file => {
             const ext = path.extname(file).toLowerCase();
             return ['.mp3', '.wav', '.m4a', '.ogg'].includes(ext);
@@ -198,7 +200,7 @@ function openAddToPlaylistModal(songName) {
     
     if (!modal || !list) return;
     
-    const cleanName = path.parse(songName).name;
+    const cleanName = path ? path.parse(songName).name : songName.replace(/\.[^/.]+$/, '');
     if (titleName) titleName.innerText = `Lagu: ${cleanName}`;
     list.innerHTML = '';
     
@@ -242,6 +244,7 @@ function loadPlaylist(isInitial = false) {
     const { songsFolder } = window.player.state;
     
     try {
+        if (!fs) return;
         if (!fs.existsSync(songsFolder)) fs.mkdirSync(songsFolder);
         const oldSongName = window.player.state.playlist[window.player.state.currentSongIndex];
         
@@ -268,7 +271,8 @@ function loadPlaylist(isInitial = false) {
             songArtistEl.innerText = "Klik (+) untuk tambah mp3";
             audio.src = '';
             const albumArtImg = document.getElementById('album-art-img');
-            if (albumArtImg) albumArtImg.src = "file://" + path.join(__dirname, "../../covers", "default.png");
+            const defaultCover = path ? ("file://" + path.join(__dirname, "../../covers", "default.png")) : "assets/logo.png";
+            if (albumArtImg) albumArtImg.src = defaultCover;
             if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
         }
     } catch (err) {
@@ -454,7 +458,7 @@ function renderPlaylist() {
                 if (mainIndex === currentSongIndex) li.classList.add('active');
                 
                 const span = document.createElement('span');
-                span.innerText = path.parse(song).name;
+                span.innerText = path ? path.parse(song).name : song.replace(/\.[^/.]+$/, '');
                 span.style.flexGrow = '1';
                 span.addEventListener('click', () => { 
                     window.player.state.currentSongIndex = mainIndex; 
@@ -500,7 +504,7 @@ function renderPlaylist() {
         if (index === currentSongIndex) li.classList.add('active');
         
         const span = document.createElement('span');
-        span.innerText = path.parse(song).name;
+        span.innerText = path ? path.parse(song).name : song.replace(/\.[^/.]+$/, '');
         span.style.flexGrow = '1';
         span.addEventListener('click', () => { 
             window.player.state.currentSongIndex = index; 
@@ -582,7 +586,7 @@ async function deleteSong(songName) {
     const { songsFolder, njoyList, currentSongIndex } = window.player.state;
     const { audio, songTitleEl, songArtistEl, playBtn } = window.player.dom;
     
-    const songCleanName = path.parse(songName).name;
+    const songCleanName = path ? path.parse(songName).name : songName.replace(/\.[^/.]+$/, '');
     const confirmed = await showCustomConfirm(
         "Hapus Lagu?",
         `Apakah Anda yakin ingin menghapus lagu "${songCleanName}" dari disk?`
@@ -590,15 +594,15 @@ async function deleteSong(songName) {
     if (!confirmed) return;
     
     try {
-        const filePath = path.join(songsFolder, songName);
+        const filePath = path ? path.join(songsFolder, songName) : songName;
         
-        if (fs.existsSync(filePath)) {
+        if (fs && fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
         
-        const cleanName = path.parse(songName).name;
-        const coverPath = path.join(__dirname, '../../covers', `${cleanName}-cover.jpg`);
-        if (fs.existsSync(coverPath)) {
+        const cleanName = path ? path.parse(songName).name : songName.replace(/\.[^/.]+$/, '');
+        const coverPath = (path && typeof __dirname !== 'undefined') ? path.join(__dirname, '../../covers', `${cleanName}-cover.jpg`) : null;
+        if (fs && coverPath && fs.existsSync(coverPath)) {
             try {
                 fs.unlinkSync(coverPath);
             } catch (e) {
@@ -621,7 +625,8 @@ async function deleteSong(songName) {
             songTitleEl.innerText = "Playlist Kosong";
             songArtistEl.innerText = "Klik (+) untuk tambah mp3";
             const albumArtImg = document.getElementById('album-art-img');
-            if (albumArtImg) albumArtImg.src = "file://" + path.join(__dirname, "../../covers", "default.png");
+            const defaultCover = path ? ("file://" + path.join(__dirname, "../../covers", "default.png")) : "assets/logo.png";
+            if (albumArtImg) albumArtImg.src = defaultCover;
             if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
             renderPlaylist();
             return;
@@ -647,11 +652,11 @@ function loadSong(index) {
     }
     window.player.state.currentSongIndex = index;
     const songName = playlist[index];
-    const filePath = path.join(songsFolder, songName);
-    audio.src = filePath;
+    const filePath = path ? path.join(songsFolder, songName) : songName;
+    audio.src = path ? `file://${filePath}` : filePath;
     renderPlaylist();
     
-    const cleanName = path.parse(songName).name;
+    const cleanName = path ? path.parse(songName).name : songName.replace(/\.[^/.]+$/, '');
     if (cleanName.includes('-')) {
         const parts = cleanName.split('-');
         songArtistEl.innerText = parts[0].trim();
@@ -666,8 +671,8 @@ function loadSong(index) {
 
 async function extractMetadata(filePath, cleanName) {
     const albumArtImg = document.getElementById('album-art-img');
-    const specificCover = path.join(__dirname, '../../covers', `${cleanName}-cover.jpg`);
-    const hasCustomCover = fs.existsSync(specificCover);
+    const specificCover = (path && typeof __dirname !== 'undefined') ? path.join(__dirname, '../../covers', `${cleanName}-cover.jpg`) : null;
+    const hasCustomCover = (fs && specificCover) ? fs.existsSync(specificCover) : false;
     const { songTitleEl, songArtistEl } = window.player.dom;
     const { isMiniMode } = window.player.state;
     
@@ -675,7 +680,7 @@ async function extractMetadata(filePath, cleanName) {
     let finalArtist = songArtistEl.innerText;
 
     try {
-        const metadata = await ipcRenderer.invoke('get-metadata', filePath);
+        const metadata = ipcRenderer ? await ipcRenderer.invoke('get-metadata', filePath) : null;
         
         if (metadata) {
             if (metadata.title) { finalTitle = metadata.title; songTitleEl.innerText = finalTitle; }
@@ -687,15 +692,16 @@ async function extractMetadata(filePath, cleanName) {
         }
 
         let finalCoverPath = hasCustomCover ? specificCover : (metadata && metadata.coverPath ? metadata.coverPath : null);
-        albumArtImg.src = finalCoverPath ? `file://${finalCoverPath}?t=${new Date().getTime()}` : "file://" + path.join(__dirname, "../../covers", "default.png");
+        const defaultCover = path ? ("file://" + path.join(__dirname, "../../covers", "default.png")) : "assets/logo.png";
+        albumArtImg.src = finalCoverPath ? `file://${finalCoverPath}?t=${new Date().getTime()}` : defaultCover;
         
-        ipcRenderer.send("show-notification", {
+        if (ipcRenderer) ipcRenderer.send("show-notification", {
             title: finalTitle,
             artist: finalArtist,
             cover: finalCoverPath || "covers/default.png"
         });
 
-        if (finalCoverPath) {
+        if (finalCoverPath && Vibrant) {
             Vibrant.from(finalCoverPath).getPalette().then((palette) => {
                 if (palette && palette.Vibrant) {
                     const rgb = palette.Vibrant.rgb;
@@ -722,7 +728,8 @@ async function extractMetadata(filePath, cleanName) {
         }
 
     } catch (error) {
-        albumArtImg.src = "file://" + path.join(__dirname, "../../covers", "default.png");
+        const defaultCover = path ? ("file://" + path.join(__dirname, "../../covers", "default.png")) : "assets/logo.png";
+        albumArtImg.src = defaultCover;
         resetDefaultThemeColors();
         if (window.player.lyrics && window.player.lyrics.fetchLyrics) {
             window.player.lyrics.fetchLyrics(finalArtist, finalTitle);

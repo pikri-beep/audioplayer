@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer } = (typeof require !== 'undefined' && require('electron')) ? require('electron') : { ipcRenderer: null };
 const path = require('path');
 const fs = require('fs');
 
@@ -88,12 +88,12 @@ function initializeUiListeners() {
         });
         
         audio.addEventListener("play", () => { 
-            ipcRenderer.send("player-state", true); 
+            if (ipcRenderer) ipcRenderer.send("player-state", true); 
             window.player.audio.syncToMiniPlayer(); 
         });
         
         audio.addEventListener("pause", () => { 
-            ipcRenderer.send("player-state", false); 
+            if (ipcRenderer) ipcRenderer.send("player-state", false); 
             window.player.audio.syncToMiniPlayer(); 
         });
     }
@@ -277,6 +277,7 @@ function initializeUiListeners() {
 
     if (importFileBtn) {
         importFileBtn.addEventListener('click', async () => {
+            if (!ipcRenderer) return;
             addDropdown.classList.remove('show');
             const files = await ipcRenderer.invoke('open-file-dialog');
             if (files && files.length > 0) {
@@ -306,19 +307,20 @@ function initializeUiListeners() {
     if (miniPlayerBtn) {
         miniPlayerBtn.addEventListener('click', () => { 
             window.player.state.isMiniMode = !window.player.state.isMiniMode; 
-            ipcRenderer.send('toggle-mini-player', window.player.state.isMiniMode); 
+            if (ipcRenderer) ipcRenderer.send('toggle-mini-player', window.player.state.isMiniMode); 
         });
     }
 
-    ipcRenderer.on('set-mini-mode', (_, isMini) => { 
+    if (ipcRenderer) ipcRenderer.on('set-mini-mode', (_, isMini) => { 
         window.player.state.isMiniMode = isMini; 
     });
     
-    ipcRenderer.on('request-state-for-mini', window.player.audio.syncToMiniPlayer);
+    if (ipcRenderer) ipcRenderer.on('request-state-for-mini', window.player.audio.syncToMiniPlayer);
 
     // Custom album cover upload
     if (uploadCoverBtn) {
         uploadCoverBtn.addEventListener('click', async () => {
+            if (!ipcRenderer) return;
             const { playlist, currentSongIndex } = window.player.state;
             if (playlist.length === 0) return;
             const currentSongName = path.parse(playlist[currentSongIndex]).name;
@@ -328,6 +330,7 @@ function initializeUiListeners() {
         
         uploadCoverBtn.addEventListener('contextmenu', async (e) => {
             e.preventDefault(); 
+            if (!ipcRenderer) return;
             const { playlist, currentSongIndex } = window.player.state;
             if (playlist.length === 0) return;
             const currentSongName = path.parse(playlist[currentSongIndex]).name;
@@ -342,13 +345,17 @@ function initializeUiListeners() {
     }
 
     // IPC system media listeners
-    ipcRenderer.on("thumb-play", () => window.player.audio.togglePlay());
-    ipcRenderer.on("thumb-next", () => window.player.audio.nextSong(false));
-    ipcRenderer.on("thumb-prev", () => window.player.audio.prevSong(false));
+    if (ipcRenderer) {
+        ipcRenderer.on("thumb-play", () => window.player.audio.togglePlay());
+        ipcRenderer.on("thumb-next", () => window.player.audio.nextSong(false));
+        ipcRenderer.on("thumb-prev", () => window.player.audio.prevSong(false));
+    }
 
-    ipcRenderer.on('shortcut-mute', window.player.audio.toggleMute);
-    ipcRenderer.on('shortcut-volume-up', () => window.player.audio.adjustVolume(0.05));
-    ipcRenderer.on('shortcut-volume-down', () => window.player.audio.adjustVolume(-0.05));
+    if (ipcRenderer) {
+        ipcRenderer.on('shortcut-mute', window.player.audio.toggleMute);
+        ipcRenderer.on('shortcut-volume-up', () => window.player.audio.adjustVolume(0.05));
+        ipcRenderer.on('shortcut-volume-down', () => window.player.audio.adjustVolume(-0.05));
+    }
 
     // Settings panel switch toggles
     const trayToggle = document.getElementById('tray-toggle');
@@ -359,12 +366,12 @@ function initializeUiListeners() {
         const savedTray = localStorage.getItem('njoy_tray');
         const trayEnabled = savedTray !== null ? savedTray === 'true' : true;
         trayToggle.checked = trayEnabled;
-        ipcRenderer.send('toggle-tray', trayEnabled);
+        if (ipcRenderer) ipcRenderer.send('toggle-tray', trayEnabled);
         
         trayToggle.addEventListener('change', (e) => {
             const enabled = e.target.checked;
             localStorage.setItem('njoy_tray', enabled);
-            ipcRenderer.send('toggle-tray', enabled);
+            if (ipcRenderer) ipcRenderer.send('toggle-tray', enabled);
         });
     }
 
@@ -372,12 +379,12 @@ function initializeUiListeners() {
         const savedNotification = localStorage.getItem('njoy_notification');
         const notificationEnabledSetting = savedNotification !== null ? savedNotification === 'true' : true;
         notificationToggle.checked = notificationEnabledSetting;
-        ipcRenderer.send('toggle-notification', notificationEnabledSetting);
+        if (ipcRenderer) ipcRenderer.send('toggle-notification', notificationEnabledSetting);
         
         notificationToggle.addEventListener('change', (e) => {
             const enabled = e.target.checked;
             localStorage.setItem('njoy_notification', enabled);
-            ipcRenderer.send('toggle-notification', enabled);
+            if (ipcRenderer) ipcRenderer.send('toggle-notification', enabled);
         });
     }
 
@@ -400,12 +407,12 @@ function initializeUiListeners() {
         const savedOntop = localStorage.getItem('njoy_ontop');
         const ontopEnabled = savedOntop !== null ? savedOntop === 'true' : false;
         ontopToggle.checked = ontopEnabled;
-        ipcRenderer.send('toggle-ontop', ontopEnabled);
+        if (ipcRenderer) ipcRenderer.send('toggle-ontop', ontopEnabled);
         
         ontopToggle.addEventListener('change', (e) => {
             const enabled = e.target.checked;
             localStorage.setItem('njoy_ontop', enabled);
-            ipcRenderer.send('toggle-ontop', enabled);
+            if (ipcRenderer) ipcRenderer.send('toggle-ontop', enabled);
         });
     }
 
@@ -438,13 +445,15 @@ function initializeUiListeners() {
     });
 
     // 6. IPC Download Metadata Update
-    ipcRenderer.on('download-metadata', (event, { url, title }) => {
-        const download = window.player.state.downloads.find(dl => dl.url === url);
-        if (download) {
-            download.title = title;
-            window.player.downloadController.renderDownloadManager();
-        }
-    });
+    if (ipcRenderer) {
+        ipcRenderer.on('download-metadata', (event, { url, title }) => {
+            const download = window.player.state.downloads.find(dl => dl.url === url);
+            if (download) {
+                download.title = title;
+                window.player.downloadController.renderDownloadManager();
+            }
+        });
+    }
 
     // 7. Keyboard shortcuts local listeners (Focus)
     window.addEventListener('keydown', (e) => {

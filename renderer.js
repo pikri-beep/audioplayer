@@ -2,9 +2,9 @@ window.addEventListener('unhandledrejection', (event) => {
     console.warn('[Renderer Unhandled Rejection]', event.reason);
 });
 
-const fs = require('fs');
-const { ipcRenderer } = require('electron');
-const path = require('path');
+const fs = (typeof require !== 'undefined') ? require('fs') : null;
+const { ipcRenderer } = (typeof require !== 'undefined' && require('electron')) ? require('electron') : { ipcRenderer: null };
+const path = (typeof require !== 'undefined') ? require('path') : null;
 
 // 1. Inisialisasi Registry Global `window.player`
 window.player = {
@@ -53,7 +53,7 @@ window.player = {
 
     // Kumpulan State Variable
     state: {
-        songsFolder: path.join(__dirname, 'songs'),
+        songsFolder: path ? path.join(__dirname, 'songs') : '/songs',
         playlist: [],
         currentSongIndex: 0,
         isShuffle: false,
@@ -99,15 +99,22 @@ window.player.dom.audio.addEventListener('timeupdate', () => {
             if (streamQueue && nextIdx < streamQueue.length) {
                 const nextTrack = streamQueue[nextIdx];
                 window.player.state.prefetchedNextStream = "fetching";
-                console.log(`\n⚡ [NJOY Pre-fetch] Background pre-fetching stream URL untuk lagu berikutnya: "${nextTrack.title}"`);
-                ipcRenderer.invoke('get-stream-url', nextTrack.url).then(res => {
-                    if (res && res.success) {
-                        window.player.state.prefetchedNextStream = res.streamUrl;
-                        console.log(`✅ [NJOY Pre-fetch Success] Stream URL lagu berikutnya sudah siap di memori!`);
-                    }
-                }).catch(() => {
-                    window.player.state.prefetchedNextStream = null;
-                });
+                console.log(`\n⚡ [NJOY Pre-fetch] Background pre-fetching stream URL: "${nextTrack.title}"`);
+                if (ipcRenderer) {
+                    ipcRenderer.invoke('get-stream-url', nextTrack.url).then(res => {
+                        if (res && res.success) {
+                            window.player.state.prefetchedNextStream = res.streamUrl;
+                        }
+                    }).catch(() => { window.player.state.prefetchedNextStream = null; });
+                } else {
+                    // Android fallback via HTTP API server
+                    fetch(`/api/get-stream-url?url=${encodeURIComponent(nextTrack.url)}`)
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res && res.success) window.player.state.prefetchedNextStream = res.streamUrl;
+                        })
+                        .catch(() => { window.player.state.prefetchedNextStream = null; });
+                }
             }
         }
     }
@@ -129,13 +136,12 @@ window.player.uiController.initializeUiListeners();
 // Load Playlist awal
 window.player.playlistManager.loadPlaylist(true);
 
-// 4. Custom Window Controls kustom
-document.getElementById('win-min').addEventListener('click', () => {
-    ipcRenderer.send('window-minimize');
-});
-document.getElementById('win-max').addEventListener('click', () => {
-    ipcRenderer.send('window-maximize');
-});
-document.getElementById('win-close').addEventListener('click', () => {
-    ipcRenderer.send('window-close');
-});
+// 4. Custom Window Controls (Electron only)
+const winMin = document.getElementById('win-min');
+const winMax = document.getElementById('win-max');
+const winClose = document.getElementById('win-close');
+if (ipcRenderer) {
+    if (winMin) winMin.addEventListener('click', () => ipcRenderer.send('window-minimize'));
+    if (winMax) winMax.addEventListener('click', () => ipcRenderer.send('window-maximize'));
+    if (winClose) winClose.addEventListener('click', () => ipcRenderer.send('window-close'));
+}

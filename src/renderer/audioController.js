@@ -22,6 +22,7 @@ function syncToMiniPlayer() {
         }
     }
 
+    if (!ipcRenderer) return;
     ipcRenderer.send('sync-mini-player', {
         title: songTitleEl ? songTitleEl.innerText : '',
         artist: songArtistEl ? songArtistEl.innerText : '',
@@ -71,7 +72,8 @@ function changeSongWithFade(newIndex) {
     if (playlist.length === 0) return;
     
     // Repeat mode fix: If repeating the exact same song, restart cleanly without clone echo
-    if (newIndex === currentSongIndex && audio.src && !audio.paused) {
+    // Guard covers both playing AND paused audio (audio.paused check removed to handle ended state)
+    if (newIndex === currentSongIndex && audio.src) {
         audio.currentTime = 0;
         audio.play().catch(e => console.log(e));
         if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
@@ -81,10 +83,13 @@ function changeSongWithFade(newIndex) {
     if (window.player.state.fadeInInterval) clearInterval(window.player.state.fadeInInterval);
     if (volumeSlider) window.player.state.targetVolume = volumeSlider.value / 100;
     
-    if (!audio.paused && audio.src && audio.currentTime > 0) {
+    // Only clone for local file:// sources — stream URLs (http/blob) cannot be cloned
+    const isLocalSrc = audio.src && audio.src.startsWith('file://');
+    if (!audio.paused && isLocalSrc && audio.currentTime > 0) {
         if (fadingOutAudio) {
             fadingOutAudio.pause();
             fadingOutAudio.src = '';
+            fadingOutAudio = null;
         }
         try {
             fadingOutAudio = new Audio(audio.src);
@@ -96,7 +101,7 @@ function changeSongWithFade(newIndex) {
             const fadeOutInt = setInterval(() => {
                 if (fadeOutVol > 0.05) {
                     fadeOutVol -= 0.05;
-                    if(fadingOutAudio) fadingOutAudio.volume = Math.max(0, fadeOutVol);
+                    if (fadingOutAudio) fadingOutAudio.volume = Math.max(0, fadeOutVol);
                 } else {
                     clearInterval(fadeOutInt);
                     if (fadingOutAudio) {
@@ -105,7 +110,7 @@ function changeSongWithFade(newIndex) {
                         fadingOutAudio = null;
                     }
                 }
-            }, 60); 
+            }, 60);
         } catch(e) { console.error(e); }
     }
     
