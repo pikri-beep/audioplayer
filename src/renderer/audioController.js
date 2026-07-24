@@ -1,13 +1,4 @@
-const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
-
-async function fetchRelatedTracks(query) {
-    if (typeof ipcRenderer !== 'undefined' && ipcRenderer) {
-        return await ipcRenderer.invoke('get-related-tracks', query);
-    } else {
-        const response = await fetch(`/api/get-related-tracks?query=${encodeURIComponent(query)}`);
-        return await response.json();
-    }
-}
+const { ipcRenderer } = require('electron');
 
 function syncToMiniPlayer() {
     const { audio, songTitleEl, songArtistEl } = window.player.dom;
@@ -22,7 +13,6 @@ function syncToMiniPlayer() {
         }
     }
 
-    if (!ipcRenderer) return;
     ipcRenderer.send('sync-mini-player', {
         title: songTitleEl ? songTitleEl.innerText : '',
         artist: songArtistEl ? songArtistEl.innerText : '',
@@ -65,31 +55,19 @@ function togglePlay() {
 let fadingOutAudio = null;
 
 function changeSongWithFade(newIndex) {
-    const { playlist, currentSongIndex } = window.player.state;
+    const { playlist } = window.player.state;
     const { audio, playBtn, volumeSlider } = window.player.dom;
     window.player.state.isStreamMode = false;
     window.player.state.isCrossfadingNext = false; 
     if (playlist.length === 0) return;
     
-    // Repeat mode fix: If repeating the exact same song, restart cleanly without clone echo
-    // Guard covers both playing AND paused audio (audio.paused check removed to handle ended state)
-    if (newIndex === currentSongIndex && audio.src) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log(e));
-        if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        return;
-    }
-    
     if (window.player.state.fadeInInterval) clearInterval(window.player.state.fadeInInterval);
     if (volumeSlider) window.player.state.targetVolume = volumeSlider.value / 100;
     
-    // Only clone for local file:// sources — stream URLs (http/blob) cannot be cloned
-    const isLocalSrc = audio.src && audio.src.startsWith('file://');
-    if (!audio.paused && isLocalSrc && audio.currentTime > 0) {
+    if (!audio.paused && audio.src && audio.currentTime > 0) {
         if (fadingOutAudio) {
             fadingOutAudio.pause();
             fadingOutAudio.src = '';
-            fadingOutAudio = null;
         }
         try {
             fadingOutAudio = new Audio(audio.src);
@@ -101,7 +79,7 @@ function changeSongWithFade(newIndex) {
             const fadeOutInt = setInterval(() => {
                 if (fadeOutVol > 0.05) {
                     fadeOutVol -= 0.05;
-                    if (fadingOutAudio) fadingOutAudio.volume = Math.max(0, fadeOutVol);
+                    if(fadingOutAudio) fadingOutAudio.volume = Math.max(0, fadeOutVol);
                 } else {
                     clearInterval(fadeOutInt);
                     if (fadingOutAudio) {
@@ -110,7 +88,7 @@ function changeSongWithFade(newIndex) {
                         fadingOutAudio = null;
                     }
                 }
-            }, 60);
+            }, 60); 
         } catch(e) { console.error(e); }
     }
     
@@ -206,7 +184,7 @@ function nextSong(isAutomatic = false) {
         } else if (shuffleMode === 'smart') {
             // Smart Shuffle ✨ for streaming: Fetch related tracks of current song artist/vibe
             const currentTitle = currentStreamTrack ? (currentStreamTrack.author + " " + currentStreamTrack.title) : "popular music";
-            fetchRelatedTracks(currentTitle).then(related => {
+            ipcRenderer.invoke('get-related-tracks', currentTitle).then(related => {
                 if (related && related.length > 0) {
                     window.player.state.streamQueue = related;
                     window.player.state.streamQueueIndex = 0;
@@ -246,7 +224,7 @@ function nextSong(isAutomatic = false) {
         } else {
             // Infinite Radio / Autoplay Related Tracks
             const currentTitle = currentStreamTrack ? currentStreamTrack.title : "popular music";
-            fetchRelatedTracks(currentTitle).then(related => {
+            ipcRenderer.invoke('get-related-tracks', currentTitle).then(related => {
                 if (related && related.length > 0) {
                     window.player.state.streamQueue = related;
                     window.player.state.streamQueueIndex = 0;

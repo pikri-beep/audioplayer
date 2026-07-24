@@ -1,4 +1,4 @@
-const { ipcRenderer } = (typeof require !== 'undefined' && require('electron')) ? require('electron') : { ipcRenderer: null };
+const { ipcRenderer } = require('electron');
 
 function handleDownloadResult(result) {
     const { ytStatusText, ytPopup, ytUrlInput } = window.player.dom;
@@ -72,12 +72,6 @@ function renderSearchResultsPage() {
             if (dlPopup) dlPopup.classList.add('show');
             
             // Jalankan download secara asinkron (non-blocking)
-            if (!ipcRenderer) {
-                newDownload.status = 'failed';
-                renderDownloadManager();
-                updateDownloadBadge();
-                return;
-            }
             ipcRenderer.invoke('download-yt', video.url).then(result => {
                 if (result.success) {
                     newDownload.status = 'success';
@@ -118,14 +112,6 @@ async function playStreamSong(videoItem, queueList = []) {
         if (window.player.state.streamQueueIndex === -1) window.player.state.streamQueueIndex = 0;
     }
     
-    // Repeat mode fix for streaming: If repeating the exact same track, restart currentTime cleanly
-    if (window.player.state.currentStreamTrack && window.player.state.currentStreamTrack.url === videoItem.url && audio.src) {
-        audio.currentTime = 0;
-        audio.play().catch(e => console.log(e));
-        if (playBtn) playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        return;
-    }
-
     window.player.state.currentStreamTrack = videoItem;
     window.player.state.isStreamMode = true;
     window.player.state.prefetchedNextStream = null;
@@ -142,14 +128,7 @@ async function playStreamSong(videoItem, queueList = []) {
             window.player.state.prefetchedNextStream = null;
             console.log(`⚡ [NJOY Instant Stream] Using pre-fetched stream URL for instant playback!`);
         } else {
-            let result = null;
-            if (typeof ipcRenderer !== 'undefined' && ipcRenderer) {
-                result = await ipcRenderer.invoke('get-stream-url', videoItem.url);
-            } else {
-                // Fallback Android HTTP API Server
-                const response = await fetch(`/api/get-stream-url?url=${encodeURIComponent(videoItem.url)}`);
-                result = await response.json();
-            }
+            const result = await ipcRenderer.invoke('get-stream-url', videoItem.url);
             if (result && result.success && result.streamUrl) {
                 streamUrlToPlay = result.streamUrl;
             }
@@ -157,9 +136,6 @@ async function playStreamSong(videoItem, queueList = []) {
 
         if (streamUrlToPlay) {
             window.player.state.isCrossfadingNext = false;
-            if (window.player.mediaSession && window.player.mediaSession.updateMediaSessionMetadata) {
-                window.player.mediaSession.updateMediaSessionMetadata(videoItem.title, videoItem.author, videoItem.thumbnail);
-            }
             
             // Ephemeral Background Clone for Crossfade Overlap
             if (!audio.paused && audio.src && audio.currentTime > 0) {
@@ -289,12 +265,6 @@ function initializeDownloadListeners() {
                 if (dlPopup) dlPopup.classList.add('show');
                 
                 const ipcChannel = isSpotify ? 'download-spotify' : 'download-yt';
-                if (!ipcRenderer) {
-                    newDownload.status = 'failed';
-                    renderDownloadManager();
-                    updateDownloadBadge();
-                    return;
-                }
                 ipcRenderer.invoke(ipcChannel, query).then(result => {
                     if (result.success) {
                         newDownload.status = 'success';
@@ -312,13 +282,10 @@ function initializeDownloadListeners() {
             } else {
                 ytSearchResults.innerHTML = '';
                 document.getElementById('yt-pagination').style.display = 'none';
-                let results = [];
-                if (typeof ipcRenderer !== 'undefined' && ipcRenderer) {
-                    results = await ipcRenderer.invoke('search-yt', query);
-                } else {
-                    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-                    results = await response.json();
-                }
+                ytStatusText.style.display = 'block';
+                ytStatusText.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mencari...';
+                
+                const results = await ipcRenderer.invoke('search-yt', query);
                 ytStatusText.style.display = 'none';
 
                 if (results.length === 0) {
